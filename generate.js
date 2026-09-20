@@ -131,47 +131,71 @@ async function fetchMovieDetail(mid) {
                  || countryYear.includes('ישראל')
                  || genreInfo.includes('ישראלי');
 
+  // review text lives in <p class="...text-truncate-2..." style="...width:85%...">
+  const reviews = [];
+  const pRe = /class="[^"]*text-truncate-2[^"]*"[^>]*style="[^"]*width:85%[^"]*"[^>]*>([\s\S]*?)<\/p>/g;
+  let rm;
+  while ((rm = pRe.exec(html)) !== null && reviews.length < 4) {
+    const text = rm[1].replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    if (text && text.length > 20) reviews.push(text);
+  }
+
   return { hebrewTitle: heTitle, englishTitle: enTitle, genre: genreInfo || genre,
            rating, coverImg, plot, actors, director, duration, language,
-           countryYear, releaseDate, isIsraeli };
+           countryYear, releaseDate, isIsraeli, reviews };
 }
 
 async function main() {
-  console.log('Fetching movie list...');
+  function bar(i, total) {
+    const W = 30, filled = Math.round((i / total) * W);
+    return '[' + '#'.repeat(filled) + '-'.repeat(W - filled) + ']';
+  }
+
+  const startTime = Date.now();
+  console.log('\n  FilmsNow — generate movies.json\n');
+  process.stdout.write('  Fetching movie list from seret.co.il...');
+
   let movies;
   try {
     movies = await fetchMovieList();
   } catch(e) {
-    console.error('Failed to fetch movie list:', e.message);
+    console.error('\n  FAILED:', e.message);
     process.exit(1);
   }
-  console.log(`Found ${movies.length} movies. Loading details...`);
+  console.log(` OK (${movies.length} movies)\n`);
 
   for (let i = 0; i < movies.length; i++) {
     const m = movies[i];
+    const pct = Math.round(((i + 1) / movies.length) * 100);
     try {
       const d = await fetchMovieDetail(m.mid);
-      m.hebrewTitle = d.hebrewTitle || m.englishName;
-      m.genre       = d.genre || '';
-      m.rating      = d.rating || null;
-      m.duration    = d.duration || '';
-      m.actors      = d.actors || '';
-      m.director    = d.director || '';
-      m.plot        = d.plot || '';
-      m.releaseDate = d.releaseDate || '';
-      m.language    = d.language || '';
-      m.coverImg    = d.coverImg || m.coverImg;
-      m.isIsraeli   = d.isIsraeli || false;
-      process.stdout.write(`[${i+1}/${movies.length}] ${m.hebrewTitle || m.englishName}\n`);
+      m.hebrewTitle  = d.hebrewTitle  || m.englishName;
+      m.englishTitle = d.englishTitle || '';
+      m.genre        = d.genre        || '';
+      m.rating       = d.rating       || null;
+      m.duration     = d.duration     || '';
+      m.actors       = d.actors       || '';
+      m.director     = d.director     || '';
+      m.plot         = d.plot         || '';
+      m.releaseDate  = d.releaseDate  || '';
+      m.language     = d.language     || '';
+      m.countryYear  = d.countryYear  || '';
+      m.coverImg     = d.coverImg     || m.coverImg;
+      m.isIsraeli    = d.isIsraeli    || false;
+      m.reviews      = d.reviews      || [];
+      const label = (m.hebrewTitle || m.englishName || m.mid).slice(0, 22).padEnd(22);
+      process.stdout.write(`\r  ${bar(i+1, movies.length)} ${pct}%  ${label}`);
     } catch(e) {
-      process.stdout.write(`[${i+1}/${movies.length}] SKIP ${m.mid}: ${e.message}\n`);
+      const label = ('SKIP ' + m.mid).padEnd(22);
+      process.stdout.write(`\r  ${bar(i+1, movies.length)} ${pct}%  ${label}`);
     }
     await new Promise(r => setTimeout(r, 250));
   }
 
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   const out = path.join(__dirname, 'movies.json');
   fs.writeFileSync(out, JSON.stringify(movies, null, 2), 'utf8');
-  console.log(`\nSaved ${movies.length} movies to movies.json`);
+  console.log(`\n\n  Done! ${movies.length} movies saved in ${elapsed}s\n`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

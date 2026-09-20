@@ -378,7 +378,7 @@ header{
   </div>
   <div class="search-wrap" id="searchWrap">
     <div class="search-box">
-      <input type="search" id="searchInput" placeholder="חפש סרט..." autocomplete="off" dir="rtl">
+      <input type="search" id="searchInput" placeholder="חפש סרט..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" dir="rtl">
       <span class="search-icon">🔍</span>
     </div>
     <div id="searchDrop" class="search-drop" hidden></div>
@@ -1061,6 +1061,11 @@ async function fetchSeretSearch(q) {
 }
 
 // ── SEARCH UI ───────────────────────────────────────────
+// strip invisible/bidi control chars that mobile Hebrew keyboards sometimes inject
+function cleanQuery(s) {
+  return s.replace(/[​-‏‪-‮⁦-⁩﻿]/g, '').trim();
+}
+
 (function() {
   const input = document.getElementById('searchInput');
   const drop  = document.getElementById('searchDrop');
@@ -1093,7 +1098,7 @@ async function fetchSeretSearch(q) {
   function hideDrop() { drop.hidden = true; focusedIdx = -1; }
 
   async function doSearch(q) {
-    if (q !== input.value.trim()) return;
+    if (q !== cleanQuery(input.value)) return;
     const ql = q.toLowerCase();
     const match = m =>
       (m.hebrewTitle && m.hebrewTitle.includes(q)) ||
@@ -1105,7 +1110,7 @@ async function fetchSeretSearch(q) {
     // POST to seret (init() already loads hebrewTitles in background)
     const seretResults = await fetchSeretSearch(q);
 
-    if (q !== input.value.trim()) return;
+    if (q !== cleanQuery(input.value)) return;
 
     // merge: seret results lead (include archive), local data fills in details
     const seen = new Set();
@@ -1120,7 +1125,7 @@ async function fetchSeretSearch(q) {
 
   input.addEventListener('input', () => {
     clearTimeout(timer);
-    const q = input.value.trim();
+    const q = cleanQuery(input.value);
     if (!q) { hideDrop(); return; }
     timer = setTimeout(() => doSearch(q), 200);
   });
