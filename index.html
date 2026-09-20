@@ -850,7 +850,11 @@ function openPopover(mid) {
     loadShowtimesTab(mid);
   }).catch(err => {
     console.error('Detail error:', err);
-    document.getElementById('tab-plot').innerHTML = `<p class="no-data">שגיאה בטעינת פרטים</p>`;
+    const url = `${SERET}/movies/s_movies.asp?MID=${mid}`;
+    const link = `<div class="showtime-link"><a href="${url}" target="_blank" rel="noopener">פתח פרטי הסרט ב-seret.co.il ↗</a></div>`;
+    document.getElementById('tab-plot').innerHTML    = link;
+    document.getElementById('tab-reviews').innerHTML = link;
+    document.getElementById('tab-where').innerHTML   = link;
   });
 }
 
@@ -1114,6 +1118,8 @@ function cleanQuery(s) {
 
     // populate session cache so shorter-prefix results survive longer queries
     (seretResults || []).forEach(r => { if (r.mid && r.hebrewTitle) seretCache.set(r.mid, r); });
+    // pre-fetch details in background so popover has content when user taps
+    (seretResults || []).forEach(r => { if (r.mid && !detailCache[r.mid]) fetchMovieDetail(r.mid).catch(() => {}); });
 
     if (q !== cleanQuery(input.value)) return;
 
