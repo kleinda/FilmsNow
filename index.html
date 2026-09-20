@@ -22,6 +22,7 @@
   --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{overflow-x:hidden}
 html,body{min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Assistant',sans-serif;direction:rtl}
 body.pop-open{overflow:hidden}
 body::before{
@@ -1169,6 +1170,26 @@ async function fetchSeretSearch(q) {
         const data = await r.json();
         if (data && data.length) {
           allMovies = data.map(m => ({ emoji: genreEmoji(m.genre), ...m }));
+          // pre-populate detail cache so openPopover needs no live network calls
+          allMovies.forEach(m => {
+            detailCache[m.mid] = {
+              mid: m.mid,
+              hebrewTitle:  m.hebrewTitle  || '',
+              englishTitle: m.englishTitle || m.englishName || '',
+              genre:        m.genre        || '',
+              rating:       m.rating       || '',
+              plot:         m.plot         || '',
+              coverImg:     m.coverImg     || '',
+              actors:       m.actors       || '',
+              director:     m.director     || '',
+              duration:     m.duration     || '',
+              language:     m.language     || '',
+              countryYear:  m.countryYear  || '',
+              releaseDate:  m.releaseDate  || '',
+              reviews:      m.reviews      || [],
+              isIsraeli:    m.isIsraeli    || false
+            };
+          });
           fromJson = true;
         }
       }
