@@ -1161,40 +1161,55 @@ async function fetchSeretSearch(q) {
 // ── INIT ───────────────────────────────────────────────
 (async function init() {
   try {
-    const movies = await fetchMovieList();
-    if (!movies.length) throw new Error('No movies');
-
-    allMovies = movies;
-    document.getElementById('loading').classList.add('hidden');
-    renderGrid();
-
-    const isMobile = navigator.maxTouchPoints > 0 || /Mobi|Android/i.test(navigator.userAgent);
-    const BATCH = isMobile ? 1 : 4;
-
-    async function loadDetail(m) {
-      try {
-        const d = await fetchMovieDetail(m.mid);
-        m.hebrewTitle = d.hebrewTitle || m.englishName;
-        m.genre       = d.genre || '';
-        m.rating      = d.rating || null;
-        m.duration    = d.duration || '';
-        m.emoji       = genreEmoji(d.genre);
-        m.releaseDate = d.releaseDate || '';
-        m.isIsraeli   = d.isIsraeli || false;
-        if (d.coverImg) m.coverImg = d.coverImg;
-        updateCardInPlace(m);
-        if (m.genre) rebuildGenreFilters();
-      } catch(e) {
-        console.error('detail fail MID=' + m.mid, e?.message || e);
-        m.hebrewTitle = m.englishName || '—';
-        updateCardInPlace(m);
+    // 1. try pre-generated static JSON (fast, no CORS, works on mobile)
+    let fromJson = false;
+    try {
+      const r = await fetch('/movies.json');
+      if (r.ok) {
+        const data = await r.json();
+        if (data && data.length) {
+          allMovies = data.map(m => ({ emoji: genreEmoji(m.genre), ...m }));
+          fromJson = true;
+        }
       }
+    } catch {}
+
+    // 2. fallback: live fetch from seret (desktop/broadband only)
+    if (!fromJson) {
+      const movies = await fetchMovieList();
+      if (!movies.length) throw new Error('No movies');
+      allMovies = movies;
+
+      const BATCH = 4;
+      async function loadDetail(m) {
+        try {
+          const d = await fetchMovieDetail(m.mid);
+          m.hebrewTitle = d.hebrewTitle || m.englishName;
+          m.genre       = d.genre || '';
+          m.rating      = d.rating || null;
+          m.duration    = d.duration || '';
+          m.emoji       = genreEmoji(d.genre);
+          m.releaseDate = d.releaseDate || '';
+          m.isIsraeli   = d.isIsraeli || false;
+          if (d.coverImg) m.coverImg = d.coverImg;
+          updateCardInPlace(m);
+          if (m.genre) rebuildGenreFilters();
+        } catch(e) {
+          m.hebrewTitle = m.englishName || '—';
+          updateCardInPlace(m);
+        }
+      }
+      document.getElementById('loading').classList.add('hidden');
+      renderGrid();
+      for (let i = 0; i < movies.length; i += BATCH) {
+        await Promise.allSettled(movies.slice(i, i + BATCH).map(loadDetail));
+      }
+      return;
     }
 
-    for (let i = 0; i < movies.length; i += BATCH) {
-      await Promise.allSettled(movies.slice(i, i + BATCH).map(loadDetail));
-      if (isMobile && i + BATCH < movies.length) await new Promise(r => setTimeout(r, 300));
-    }
+    document.getElementById('loading').classList.add('hidden');
+    rebuildGenreFilters();
+    renderGrid();
   } catch (err) {
     console.error('Init error:', err);
     document.getElementById('loading').classList.add('hidden');
