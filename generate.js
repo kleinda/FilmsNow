@@ -68,8 +68,8 @@ async function fetchMovieList() {
     });
   }
 
-  // DOM-pass fallback (no jsdom — regex for links)
-  const linkRe = /href="s_movies\.asp\?MID=(\d+)"/gi;
+  // fallback: match both relative and absolute seret URLs (nav_richcontent_mov uses absolute)
+  const linkRe = /s_movies\.asp\?MID=(\d+)/gi;
   let lm;
   while ((lm = linkRe.exec(html)) !== null) {
     const mid = lm[1];
