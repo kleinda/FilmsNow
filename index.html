@@ -793,7 +793,7 @@ function setTab(name) {
 }
 
 function openPopover(mid) {
-  const movie = allMovies.find(m => m.mid === mid) || {};
+  const movie = allMovies.find(m => m.mid === mid) || seretCache.get(mid) || {};
 
   document.getElementById('popTitleHe').textContent = movie.hebrewTitle || movie.englishName || '...';
   document.getElementById('popTitleEn').textContent = movie.englishName || '';
@@ -847,7 +847,12 @@ function openPopover(mid) {
       document.getElementById('tab-reviews').innerHTML =
         `<div class="showtime-link"><a href="${SERET}/movies/s_movies.asp?MID=${mid}#rev" target="_blank">ביקורות ב-seret.co.il ↗</a></div>`;
     }
-    loadShowtimesTab(mid);
+    if (allMovies.some(m => m.mid === mid)) {
+      loadShowtimesTab(mid);
+    } else {
+      document.getElementById('tab-where').innerHTML =
+        '<div class="showtime-link"><p>הסרט אינו מוצג כרגע בקולנוע</p></div>';
+    }
   }).catch(err => {
     console.error('Detail error:', err);
     const url = `${SERET}/movies/s_movies.asp?MID=${mid}`;
@@ -1164,11 +1169,7 @@ function cleanQuery(s) {
     if (e.target.closest('.sres-seret-link')) return;
     const item = e.target.closest('[data-mid]');
     if (!item) return;
-    if (item.dataset.inCinema === '1') {
-      openPopover(item.dataset.mid);
-    } else {
-      window.open(`${SERET}/movies/s_movies.asp?MID=${item.dataset.mid}`, '_blank', 'noopener');
-    }
+    openPopover(item.dataset.mid);
     hideDrop();
     input.value = '';
   });
