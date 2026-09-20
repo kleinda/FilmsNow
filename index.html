@@ -439,6 +439,7 @@ const WEEK_NAMES = ['','ראשון','שני','שלישי','רביעי','חמיש
 
 let allMovies = [];
 let detailCache = {};
+let seretCache = new Map(); // session cache: mid → movie object found via seret live search
 let activeWeekFilter = 'all';
 let activeGenreFilter = 'all';
 
@@ -1104,18 +1105,25 @@ function cleanQuery(s) {
       (m.hebrewTitle && m.hebrewTitle.includes(q)) ||
       (m.englishName && m.englishName.toLowerCase().includes(ql));
 
-    // immediate local results
-    renderDrop(allMovies.filter(match), q, true);
+    // immediate local + session-cache results
+    const cacheHits = [...seretCache.values()].filter(match);
+    renderDrop([...allMovies.filter(match), ...cacheHits.filter(r => !allMovies.find(m => m.mid === r.mid))], q, true);
 
-    // POST to seret (init() already loads hebrewTitles in background)
+    // POST to seret live search
     const seretResults = await fetchSeretSearch(q);
+
+    // populate session cache so shorter-prefix results survive longer queries
+    (seretResults || []).forEach(r => { if (r.mid && r.hebrewTitle) seretCache.set(r.mid, r); });
 
     if (q !== cleanQuery(input.value)) return;
 
-    // merge: seret results lead (include archive), local data fills in details
+    // merge: seret results lead (include archive), then cache hits, then local
     const seen = new Set();
     const merged = [];
     (seretResults || []).forEach(r => { if (!seen.has(r.mid)) { seen.add(r.mid); merged.push(r); } });
+    [...seretCache.values()].filter(match).forEach(r => {
+      if (!seen.has(r.mid)) { seen.add(r.mid); merged.push(r); }
+    });
     allMovies.filter(match).forEach(m => {
       if (!seen.has(m.mid)) { seen.add(m.mid); merged.push({...m, inCinema: true}); }
     });
