@@ -140,8 +140,11 @@ async function fetchMovieDetail(mid) {
     if (text && text.length > 20) reviews.push(text);
   }
 
+  const folderFromCover = (coverImg.match(/images\/movies\/([^/]+)\//) || [])[1] || '';
+  const posterImg = folderFromCover ? `${SERET}/images/movies/${folderFromCover}/${folderFromCover}1.jpg` : '';
+
   return { hebrewTitle: heTitle, englishTitle: enTitle, genre: genreInfo || genre,
-           rating, coverImg, plot, actors, director, duration, language,
+           rating, coverImg, posterImg, plot, actors, director, duration, language,
            countryYear, releaseDate, isIsraeli, reviews };
 }
 
@@ -181,6 +184,7 @@ async function main() {
       m.language     = d.language     || '';
       m.countryYear  = d.countryYear  || '';
       m.coverImg     = d.coverImg     || m.coverImg;
+      m.posterImg    = d.posterImg    || m.posterImg;
       m.isIsraeli    = d.isIsraeli    || false;
       m.reviews      = d.reviews      || [];
       const label = (m.hebrewTitle || m.englishName || m.mid).slice(0, 22).padEnd(22);
