@@ -831,7 +831,7 @@ function openPopover(mid) {
       : '';
     document.getElementById('tab-plot').innerHTML = `
       ${d.director ? `<p class="director-line">בימוי: <strong>${d.director}</strong></p>` : ''}
-      ${d.plot ? `<p class="plot-text">${d.plot}</p>` : `<p class="no-data">אין עלילה זמינה</p>`}
+      ${d.plot ? `<p class="plot-text">${d.plot}</p>` : `<div class="showtime-link"><a href="${SERET}/movies/s_movies.asp?MID=${mid}" target="_blank" rel="noopener">צפה בעלילה ב-seret.co.il ↗</a></div>`}
       ${actorChips ? `<div class="actors-section"><h4>שחקנים</h4><div class="actors-list">${actorChips}</div></div>` : ''}
       ${d.duration || d.countryYear ? `
         <div class="meta-grid">
@@ -1189,8 +1189,10 @@ function cleanQuery(s) {
         const data = await r.json();
         if (data && data.length) {
           allMovies = data.map(m => ({ emoji: genreEmoji(m.genre), ...m }));
-          // pre-populate detail cache so openPopover needs no live network calls
+          // pre-populate detail cache so openPopover needs no live network calls.
+          // skip movies with no plot — they will trigger a fresh live fetch instead.
           allMovies.forEach(m => {
+            if (!m.plot) return;
             detailCache[m.mid] = {
               mid: m.mid,
               hebrewTitle:  m.hebrewTitle  || '',

@@ -433,7 +433,7 @@
     "coverImg": "https://www.seret.co.il/images/movies/HomoSapiens/HomoSapiens_coverBig.jpg",
     "hebrewTitle": "סיפורים קרועים",
     "genre": "קומדיה זר",
-    "rating": "7.5",
+    "rating": "7.2",
     "duration": "98 דקות",
     "actors": "גיירמו פרנצ'לה",
     "director": "מריאנו קוהן",
@@ -443,7 +443,9 @@
     "isIsraeli": false,
     "englishTitle": "Homo Sapiens",
     "countryYear": "ספרד/ארגנטינה / 2025",
-    "reviews": []
+    "reviews": [
+      "אוסף של 16 סיפורים קטנים,אפיזודות מהחיים של כולנו,כשבכולם אותו שחקן ראשי שמגלם דמויות שונות.יש הפתעות,יש הומור,יש דילמות אנושיות.סרט קליל."
+    ]
   },
   {
     "mid": "8578",
