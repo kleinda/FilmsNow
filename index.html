@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>הסרטים בקולנוע</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080810;--card-bg:#12121e;--pop-bg:rgba(10,10,20,.97);
+  --gold:#f0c040;--cyan:#00d4ff;--rose:#ff4d6d;
+  --green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+  --text:#f0f0f5;--muted:#888;
+  --border:rgba(255,255,255,.08);
+  --radius:14px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--text);font-family:'Assistant',sans-serif;direction:rtl}
+body.pop-open{overflow:hidden}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(0,180,255,.08),transparent),
+             radial-gradient(ellipse 60% 40% at 80% 100%,rgba(255,60,100,.06),transparent);
+  pointer-events:none;z-index:0
+}
+
+/* ── HEADER ─────────────────────────────────────────── */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(8,8,16,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:12px 20px;
+  display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap
+}
+.site-title{
+  font-family:'Frank Ruhl Libre',serif;font-weight:900;font-size:1.45rem;
+  background:linear-gradient(120deg,var(--gold),var(--cyan));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  white-space:nowrap;flex-shrink:0;line-height:1.2
+}
+.site-subtitle{font-size:.78rem;color:var(--muted);margin-top:2px}
+.header-brand{display:flex;flex-direction:column;flex-shrink:0}
+
+.filter-rows{display:flex;flex-direction:column;gap:7px;flex:1;min-width:0}
+.filter-row{
+  display:flex;gap:6px;align-items:center;
+  flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;padding-bottom:2px
+}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-label{font-size:.72rem;color:var(--muted);white-space:nowrap;padding:2px 4px;flex-shrink:0}
+
+.fbtn{
+  padding:6px 14px;border-radius:20px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-family:'Assistant',sans-serif;
+  font-size:.82rem;cursor:pointer;transition:all .2s;white-space:nowrap;
+  flex-shrink:0;min-height:32px;touch-action:manipulation
+}
+.fbtn:hover{color:var(--text);border-color:rgba(255,255,255,.25)}
+.fbtn:active{opacity:.7}
+.fbtn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700}
+.fbtn.genre-israeli.active{background:var(--cyan);border-color:var(--cyan);color:#000}
+
+/* ── LOADING ────────────────────────────────────────── */
+#loading{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--bg);gap:20px;min-height:100dvh
+}
+#loading .spin{
+  width:48px;height:48px;border:3px solid var(--border);
+  border-top-color:var(--gold);border-radius:50%;
+  animation:spin .8s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading .load-text{font-size:1.1rem;color:var(--muted)}
+#loading.hidden{display:none}
+
+/* ── ERROR ──────────────────────────────────────────── */
+#error-msg{display:none;text-align:center;padding:60px 20px;color:var(--muted)}
+#error-msg.show{display:block}
+#error-msg a{color:var(--cyan);text-decoration:none}
+
+/* ── GRID ───────────────────────────────────────────── */
+#grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:20px;padding:28px 20px;max-width:1400px;margin:0 auto;
+  position:relative;z-index:1
+}
+
+/* ── CARD ───────────────────────────────────────────── */
+.card{
+  position:relative;border-radius:var(--radius);overflow:hidden;
+  background:var(--card-bg);cursor:pointer;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  animation:cardIn .4s ease both;transition:transform .2s,box-shadow .2s;
+  touch-action:manipulation
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media(hover:hover){.card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.7)}}
+.card:active{opacity:.85;transform:scale(.98)}
+.card-img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--card-bg)}
+.img-placeholder{
+  width:100%;aspect-ratio:2/3;
+  background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+  display:flex;align-items:center;justify-content:center;
+  font-size:4rem;pointer-events:none
+}
+
+.rating-badge{
+  position:absolute;top:10px;right:10px;z-index:5;
+  width:44px;height:44px;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'Frank Ruhl Libre',serif;font-weight:900;
+  border:2.5px solid;box-shadow:0 2px 12px rgba(0,0,0,.5);
+  background:rgba(0,0,0,.82);pointer-events:none
+}
+.rating-badge.good{border-color:var(--green);color:var(--green)}
+.rating-badge.mid{border-color:var(--amber);color:var(--amber)}
+.rating-badge.bad{border-color:var(--red);color:var(--red)}
+.rating-num{font-size:1.05rem;line-height:1}
+.rating-sub{font-size:.52rem;opacity:.7;font-family:'Assistant',sans-serif}
+
+.week-badge{
+  position:absolute;top:10px;left:10px;z-index:5;
+  padding:3px 8px;border-radius:20px;font-size:.65rem;
+  background:rgba(0,180,255,.2);border:1px solid rgba(0,180,255,.3);
+  color:var(--cyan);backdrop-filter:blur(4px);pointer-events:none;
+  max-width:calc(100% - 70px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis
+}
+.card-body{padding:10px 12px 12px}
+.card-title{
+  font-family:'Frank Ruhl Libre',serif;font-size:1rem;font-weight:700;
+  line-height:1.3;margin-bottom:6px;min-height:2.6rem
+}
+.shimmer{
+  background:linear-gradient(90deg,#1e1e2e 25%,#2a2a3e 50%,#1e1e2e 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px
+}
+@keyframes shimmer{to{background-position:-200% 0}}
+.genre-badge{
+  display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;
+  background:rgba(240,192,64,.12);border:1px solid rgba(240,192,64,.25);color:var(--gold)
+}
+.release-info{font-size:.72rem;color:var(--muted);margin-top:5px}
+
+/* ── OVERLAY + POPOVER ──────────────────────────────── */
+#overlay{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  align-items:flex-end;justify-content:center
+}
+#overlay.open{display:flex}
+#popover{
+  width:100%;max-width:680px;
+  max-height:calc(92vh - var(--safe-top));
+  background:var(--pop-bg);border:1px solid var(--border);
+  border-radius:22px 22px 0 0;overflow:hidden;
+  display:flex;flex-direction:column;
+  box-shadow:0 -8px 48px rgba(0,0,0,.9);
+  animation:slideUp .28s ease;
+  will-change:transform;
+  padding-bottom:var(--safe-bottom)
+}
+@keyframes slideUp{from{transform:translateY(70px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.pop-handle{
+  width:44px;height:5px;border-radius:3px;background:rgba(255,255,255,.15);
+  margin:10px auto 0;flex-shrink:0;cursor:grab
+}
+.pop-hero{position:relative;height:170px;overflow:hidden;flex-shrink:0}
+.pop-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(2px) brightness(.32)}
+.pop-hero-content{position:relative;z-index:1;display:flex;gap:14px;align-items:flex-end;padding:14px 18px;height:100%}
+.pop-poster{width:76px;height:114px;border-radius:8px;object-fit:cover;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,.7);background:var(--card-bg)}
+.pop-info{flex:1;min-width:0}
+.pop-title-he{font-family:'Frank Ruhl Libre',serif;font-size:1.45rem;font-weight:900;line-height:1.2;margin-bottom:3px}
+.pop-title-en{font-size:.82rem;color:var(--muted);direction:ltr;text-align:right;margin-bottom:7px}
+.pop-badges{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.pop-genre{padding:3px 11px;border-radius:20px;font-size:.73rem;background:rgba(240,192,64,.15);border:1px solid rgba(240,192,64,.3);color:var(--gold)}
+.pop-rating{padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:700;border:1px solid}
+.pop-rating.good{background:rgba(34,197,94,.15);border-color:var(--green);color:var(--green)}
+.pop-rating.mid{background:rgba(245,158,11,.15);border-color:var(--amber);color:var(--amber)}
+.pop-rating.bad{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red)}
+.pop-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.pop-tag{padding:2px 8px;border-radius:20px;font-size:.68rem;background:rgba(255,255,255,.07);color:var(--muted)}
+
+.pop-tabs{
+  display:flex;border-bottom:1px solid var(--border);flex-shrink:0;
+  background:rgba(0,0,0,.3);padding:0 16px;gap:2px;
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch
+}
+.pop-tabs::-webkit-scrollbar{display:none}
+.tab-btn{
+  padding:13px 16px;font-size:.84rem;font-family:'Assistant',sans-serif;
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  white-space:nowrap;transition:all .2s;flex-shrink:0;
+  touch-action:manipulation;min-height:44px
+}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-btn:active{opacity:.7}
+
+.pop-scroll{flex:1;overflow-y:auto;padding:18px;overscroll-behavior:contain}
+.pop-scroll::-webkit-scrollbar{width:3px}
+.pop-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.plot-text{font-size:.94rem;line-height:1.85;color:#ccc;margin-bottom:18px}
+.actors-section h4{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.actors-list{display:flex;flex-wrap:wrap;gap:7px}
+.actor-chip{padding:6px 13px;border-radius:20px;font-size:.8rem;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);color:var(--cyan)}
+.director-line{font-size:.84rem;color:var(--muted);margin-bottom:13px}
+.director-line strong{color:var(--text)}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.meta-item{background:rgba(255,255,255,.04);border-radius:8px;padding:8px 12px}
+.meta-label{font-size:.7rem;color:var(--muted);margin-bottom:2px}
+.meta-value{font-size:.84rem;color:var(--text)}
+
+.review-card{background:rgba(255,255,255,.04);border-radius:10px;padding:14px;margin-bottom:11px;border-right:3px solid var(--gold)}
+.review-text{font-size:.87rem;line-height:1.75;color:#ccc}
+
+.showtime-link{text-align:center;padding:28px 20px;color:var(--muted);font-size:.9rem;line-height:2.2}
+.showtime-link a{color:var(--cyan);text-decoration:none;border-bottom:1px solid rgba(0,212,255,.3);padding-bottom:2px}
+.showtimes-wrap{font-size:.82rem;line-height:1.6;direction:rtl;text-align:right;color:var(--text)}
+.showtimes-wrap .cityname{color:var(--gold);font-size:.88rem;font-weight:700;margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.showtimes-wrap a{color:var(--muted);text-decoration:none}
+
+.no-data{text-align:center;color:var(--muted);font-size:.9rem;padding:24px 0}
+
+.close-btn{
+  position:absolute;top:12px;left:12px;z-index:10;
+  width:44px;height:44px;border-radius:50%;
+  border:1px solid var(--border);background:rgba(0,0,0,.6);
+  color:var(--muted);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;touch-action:manipulation
+}
+.close-btn:hover{color:var(--text);background:rgba(255,255,255,.1)}
+.close-btn:active{opacity:.7}
+
+#empty-state{display:none;text-align:center;padding:60px 20px;color:var(--muted);font-size:1rem;position:relative;z-index:1}
+#empty-state.show{display:block}
+
+/* ── MOBILE ─────────────────────────────────────────── */
+@media(max-width:700px){
+  header{
+    flex-direction:column;gap:8px;
+    padding:10px 14px;
+    padding-top:max(10px, var(--safe-top))
+  }
+  .header-brand{flex-direction:row;align-items:center;gap:10px}
+  .site-title{font-size:1.2rem}
+  .site-subtitle{display:none}
+  .filter-rows{width:100%}
+  .filter-label{font-size:.68rem}
+  .fbtn{font-size:.78rem;padding:5px 11px}
+}
+
+@media(max-width:600px){
+  #grid{grid-template-columns:repeat(2,1fr);gap:10px;padding:12px}
+  .card-title{font-size:.92rem;min-height:2.4rem}
+  .card-body{padding:8px 10px 10px}
+  .genre-badge{font-size:.65rem;padding:2px 8px}
+
+  /* hide week badge on narrow cards */
+  .week-badge{display:none}
+
+  #popover{
+    max-height:calc(96vh - var(--safe-top));
+    border-radius:18px 18px 0 0
+  }
+  .pop-hero{height:140px}
+  .pop-poster{width:64px;height:96px}
+  .pop-title-he{font-size:1.15rem}
+  .pop-title-en{font-size:.75rem;margin-bottom:5px}
+  .pop-scroll{padding:14px}
+  .tab-btn{padding:12px 13px;font-size:.8rem}
+  .plot-text{font-size:.88rem}
+  .actor-chip{padding:5px 10px;font-size:.76rem}
+  .meta-grid{grid-template-columns:1fr}
+  .close-btn{top:10px;left:10px;width:40px;height:40px}
+}
+
+@media(max-width:360px){
+  #grid{gap:8px;padding:10px}
+  .card-title{font-size:.85rem}
+  .rating-badge{width:38px;height:38px}
+  .rating-num{font-size:.95rem}
+}
+
+/* ── SEARCH ──────────────────────────────────────────── */
+.search-wrap{position:relative;flex-shrink:0;width:230px;align-self:center}
+.search-box{position:relative}
+#searchInput{
+  width:100%;padding:8px 14px 8px 36px;
+  background:rgba(255,255,255,.07);border:1px solid var(--border);
+  border-radius:22px;color:var(--text);font-family:'Assistant',sans-serif;
+  font-size:.88rem;outline:none;transition:all .2s;direction:rtl
+}
+#searchInput:focus{background:rgba(255,255,255,.11);border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.1)}
+#searchInput::placeholder{color:var(--muted)}
+.search-icon{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  color:var(--muted);pointer-events:none;font-size:.95rem;line-height:1
+}
+.search-drop{
+  position:absolute;top:calc(100% + 8px);right:0;
+  width:340px;max-height:430px;overflow-y:auto;
+  background:rgba(12,12,22,.98);border:1px solid rgba(255,255,255,.13);
+  border-radius:14px;backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  box-shadow:0 24px 70px rgba(0,0,0,.75);z-index:600;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent
+}
+.search-drop::-webkit-scrollbar{width:4px}
+.search-drop::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.sres{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;cursor:pointer;transition:background .12s;
+  border-bottom:1px solid rgba(255,255,255,.04)
+}
+.sres:last-child{border-bottom:none}
+.sres:hover,.sres.focused{background:rgba(255,255,255,.07)}
+.sres-img{
+  width:40px;height:58px;object-fit:cover;border-radius:6px;flex-shrink:0;
+  background:rgba(255,255,255,.05)
+}
+.sres-info{flex:1;min-width:0}
+.sres-title{font-size:.9rem;font-weight:600;color:var(--text);line-height:1.3;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sres-genre{font-size:.74rem;color:var(--muted);margin-top:3px}
+.sres-rating{font-size:.82rem;font-weight:700;color:var(--gold);flex-shrink:0}
+.search-no-res{padding:20px 16px;text-align:center;color:var(--muted);font-size:.88rem}
+.sres-archive{opacity:.7}
+.sres-notcurrent{color:var(--gold);font-size:.72rem}
+.sres-seret-link{
+  display:block;padding:10px 16px;text-align:center;
+  font-size:.8rem;color:var(--cyan);text-decoration:none;
+  border-top:1px solid var(--border);opacity:.8
+}
+.sres-seret-link:hover{opacity:1}
+
+@media(max-width:700px){
+  .search-wrap{width:100%}
+  .search-drop{width:100%;right:0}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="site-title">🎬 הסרטים בקולנוע</div>
+    <div class="site-subtitle">עדכון אוטומטי מ-seret.co.il</div>
+  </div>
+  <div class="filter-rows">
+    <div class="filter-row" id="week-filters">
+      <span class="filter-label">שבוע:</span>
+      <button class="fbtn active" data-week="all">הכל</button>
+      <button class="fbtn" data-week="1">ראשון</button>
+      <button class="fbtn" data-week="2">שני</button>
+      <button class="fbtn" data-week="3">שלישי</button>
+    </div>
+    <div class="filter-row" id="genre-filters">
+      <span class="filter-label">סוג:</span>
+      <button class="fbtn active" data-genre="all">הכל</button>
+    </div>
+  </div>
+  <div class="search-wrap" id="searchWrap">
+    <div class="search-box">
+      <input type="search" id="searchInput" placeholder="חפש סרט..." autocomplete="off" dir="rtl">
+      <span class="search-icon">🔍</span>
+    </div>
+    <div id="searchDrop" class="search-drop" hidden></div>
+  </div>
+</header>
+
+<div id="loading">
+  <div class="spin"></div>
+  <div class="load-text">טוען סרטים מ-seret.co.il...</div>
+</div>
+
+<div id="error-msg">
+  <p style="font-size:1.2rem;margin-bottom:12px">לא ניתן לטעון נתונים</p>
+  <p>ניתן לצפות בסרטים ישירות ב: <a href="https://www.seret.co.il/movies/newmovies.asp" target="_blank">seret.co.il ↗</a></p>
+</div>
+
+<div id="grid"></div>
+<div id="empty-state">אין סרטים התואמים את הסינון הנוכחי</div>
+
+<div id="overlay">
+  <div id="popover">
+    <button class="close-btn" id="closeBtn" aria-label="סגור">✕</button>
+    <div class="pop-handle" id="popHandle"></div>
+
+    <div class="pop-hero">
+      <div class="pop-hero-bg" id="popHeroBg"></div>
+      <div class="pop-hero-content">
+        <img class="pop-poster" id="popPoster" src="" alt="">
+        <div class="pop-info">
+          <div class="pop-title-he" id="popTitleHe"></div>
+          <div class="pop-title-en" id="popTitleEn"></div>
+          <div class="pop-badges">
+            <span class="pop-genre" id="popGenre"></span>
+            <span class="pop-rating" id="popRating"></span>
+          </div>
+          <div class="pop-meta" id="popMeta"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pop-tabs">
+      <button class="tab-btn active" data-tab="plot">עלילה ושחקנים</button>
+      <button class="tab-btn" data-tab="reviews">ביקורות</button>
+      <button class="tab-btn" data-tab="where">היכן מוצג</button>
+    </div>
+
+    <div class="pop-scroll">
+      <div class="tab-panel active" id="tab-plot"><p class="no-data">טוען...</p></div>
+      <div class="tab-panel" id="tab-reviews"><p class="no-data">טוען...</p></div>
+      <div class="tab-panel" id="tab-where"><p class="no-data">טוען...</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SERET = 'https://www.seret.co.il';
+const WEEK_NAMES = ['','ראשון','שני','שלישי','רביעי','חמישי'];
+
+let allMovies = [];
+let detailCache = {};
+let activeWeekFilter = 'all';
+let activeGenreFilter = 'all';
+
+// ── FETCH HTML (windows-1255) ──────────────────────────
+async function getHtml(path) {
+  const resp = await fetch(SERET + path, {mode:'cors'});
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${path}`);
+  const buf = await resp.arrayBuffer();
+  return new TextDecoder('windows-1255').decode(buf);
+}
+
+// ── WEEK PARSER ────────────────────────────────────────
+function parseWeek(text) {
+  if (!text) return 99;
+  const n = text.match(/\d+/);
+  if (n) return parseInt(n[0]);
+  if (text.includes('ראשון')) return 1;
+  if (text.includes('שני')) return 2;
+  if (text.includes('שלישי')) return 3;
+  if (text.includes('רביעי')) return 4;
+  if (text.includes('חמישי')) return 5;
+  return 99;
+}
+
+function genreEmoji(genre) {
+  const g = (genre || '').toLowerCase();
+  if (g.includes('אנימ') || g.includes('ילד') || g.includes('משפח')) return '🎠';
+  if (g.includes('קומד')) return '😂';
+  if (g.includes('רומנ') || g.includes('אהבה')) return '💕';
+  if (g.includes('פעולה') || g.includes('אקשן')) return '⚡';
+  if (g.includes('אימה')) return '👻';
+  if (g.includes('מתח') || g.includes('thriller')) return '🔥';
+  if (g.includes('מדע')) return '🚀';
+  if (g.includes('מלחמה') || g.includes('היסטו')) return '⚔️';
+  if (g.includes('בלש') || g.includes('מסתורין') || g.includes('ריגול')) return '🔍';
+  if (g.includes('דרמה')) return '🎭';
+  if (g.includes('מוזיקה') || g.includes('מוסיקה')) return '🎵';
+  return '🎬';
+}
+
+function parseDurationMins(str) {
+  if (!str) return 0;
+  const hm = str.match(/(\d+):(\d+)/);
+  if (hm) return parseInt(hm[1]) * 60 + parseInt(hm[2]);
+  const m = str.match(/(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function ratingClass(r, duration) {
+  if (parseDurationMins(duration) > 125) return 'bad';
+  const n = parseFloat(r);
+  if (isNaN(n)) return '';
+  if (n >= 7) return 'good';
+  if (n >= 5) return 'mid';
+  return 'bad';
+}
+
+// ── GENRE FILTER ───────────────────────────────────────
+// Consolidated categories — order determines button order
+const GENRE_GROUPS = [
+  { label: 'ישראלי', match: m => m.isIsraeli },
+  { label: 'ילדים',  match: m => /אנימ|ילד|משפח/i.test(m.genre) },
+  { label: 'קומדיה', match: m => /קומד/i.test(m.genre) },
+  { label: 'דרמה',   match: m => /דרמה|רומנ|אהבה|ביוגר|תיעוד/i.test(m.genre) },
+  { label: 'מתח',    match: m => /פעולה|אקשן|מתח|ריגול|בלש|מסתורין|מלחמה/i.test(m.genre) },
+  { label: 'אימה',   match: m => /אימה|מדע.בדיוני|sci.fi|פנטזיה/i.test(m.genre) },
+];
+
+function matchesGenre(m, filter) {
+  if (filter === 'all') return true;
+  const group = GENRE_GROUPS.find(g => g.label === filter);
+  return group ? group.match(m) : false;
+}
+
+const knownGenres = new Set(['all']);
+function rebuildGenreFilters() {
+  const container = document.getElementById('genre-filters');
+  GENRE_GROUPS.forEach(group => {
+    if (knownGenres.has(group.label)) return;
+    if (allMovies.some(m => m.hebrewTitle && group.match(m))) {
+      knownGenres.add(group.label);
+      const btn = document.createElement('button');
+      btn.className = 'fbtn' + (group.label === 'ישראלי' ? ' genre-israeli' : '');
+      btn.dataset.genre = group.label;
+      btn.textContent = group.label;
+      container.appendChild(btn);
+    }
+  });
+}
+
+// ── FETCH MOVIE LIST ───────────────────────────────────
+async function fetchMovieList() {
+  const html = await getHtml('/movies/newmovies.asp');
+  const movies = [];
+  const seen = new Set();
+
+  // primary parse: regex preserves week-label context
+  const re = /class="lwhite16 noticetxt">([\s\S]*?)<\/div>[\s\S]*?href="s_movies\.asp\?MID=(\d+)"[\s\S]*?data-src="\.\.\/images\/movies\/([^\/]+)\/[^"]*"[^>]+alt="([^"]+)"/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const [, weekText, mid, folder, altName] = m;
+    if (seen.has(mid)) continue;
+    seen.add(mid);
+    const week = parseWeek(weekText.trim());
+    movies.push({
+      mid, week, weekLabel: weekText.trim(), folder,
+      englishName: altName,
+      posterImg: `${SERET}/images/movies/${folder}/${folder}1.jpg`,
+      coverImg: `${SERET}/images/movies/${folder}/${folder}_coverBig.jpg`,
+      hebrewTitle: '', genre: '', rating: null, releaseDate: '',
+      isIsraeli: false, emoji: '🎬'
+    });
+  }
+
+  // supplementary DOM pass: catch any movies the regex missed
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('a[href*="s_movies.asp?MID="]').forEach(link => {
+    const mid = (link.getAttribute('href') || '').match(/MID=(\d+)/i)?.[1];
+    if (!mid || seen.has(mid)) return;
+    const imgEl = link.querySelector('img[data-src]') ||
+                  link.parentElement?.querySelector('img[data-src*="movies"]');
+    const dataSrc = imgEl?.getAttribute('data-src') || '';
+    const folder  = dataSrc.match(/\/movies\/([^\/]+)\//)?.[1];
+    seen.add(mid);
+    const altName = imgEl?.getAttribute('alt') || '';
+    movies.push({
+      mid, week: 99, weekLabel: '', folder: folder || '',
+      englishName: altName,
+      posterImg: folder ? `${SERET}/images/movies/${folder}/${folder}1.jpg` : '',
+      coverImg:  folder ? `${SERET}/images/movies/${folder}/${folder}_coverBig.jpg` : '',
+      hebrewTitle: '', genre: '', rating: null, releaseDate: '',
+      isIsraeli: false, emoji: '🎬'
+    });
+  });
+
+  return movies;
+}
+
+// ── FETCH MOVIE DETAIL ─────────────────────────────────
+async function fetchMovieDetail(mid) {
+  if (detailCache[mid]) return detailCache[mid];
+  const html = await getHtml(`/movies/s_movies.asp?MID=${mid}`);
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  const hebrewTitle  = doc.querySelector('h1.TitWhite22 span')?.textContent?.trim() || '';
+  const englishTitle = doc.querySelector('h2.TitWhite22 span')?.textContent?.trim() || '';
+  const genre        = doc.querySelector('span.buttonGRYs')?.textContent?.trim() || '';
+
+  let rating = '';
+  for (const el of doc.querySelectorAll('[class*="DarkGreenStrong30"]')) {
+    const sp = el.querySelector('span');
+    if (sp && /^\d/.test(sp.textContent.trim())) { rating = sp.textContent.trim(); break; }
+  }
+
+  const bgEl    = doc.getElementById('bg_cover');
+  const coverM  = (bgEl?.getAttribute('style') || '').match(/url\(['"]?([^'")\s]+)['"]?\)/);
+  const coverImg = coverM ? coverM[1] : '';
+  const plot     = doc.querySelector('.subtitwhite')?.textContent?.trim() || '';
+
+  function extractInfo(label) {
+    const esc = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re  = new RegExp(`>${esc}<\\/span>[\\s\\S]*?<span[^>]*73%[^>]*>([\\s\\S]*?)<\\/span>`);
+    const mm  = html.match(re);
+    if (!mm) return '';
+    return mm[1].replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  const actors      = extractInfo('שחקן / שחקנים') || extractInfo('שחקנים') || extractInfo('שחקן');
+  const director    = extractInfo('במאי/ת') || extractInfo('בימאי/ת') || extractInfo('בימאי');
+  const duration    = extractInfo('אורך');
+  const language    = extractInfo('שפה');
+  const countryYear = extractInfo('מקום / שנה') || extractInfo('מדינה / שנה') || extractInfo('מדינה');
+  const releaseDate = extractInfo('בכורה') || extractInfo('יצא');
+  const genreInfo   = extractInfo("ז'אנרים") || extractInfo("ג'אנר") || genre;
+
+  const reviews = [];
+  const revbox  = doc.getElementById('revboxContent');
+  if (revbox) {
+    revbox.querySelectorAll('script,style,noscript').forEach(el => el.remove());
+
+    // seret review cards: .bg-white containers with p.text-truncate-2 for the actual text
+    revbox.querySelectorAll('.bg-white, [class*="rounded-xl"]').forEach(card => {
+      if (reviews.length >= 4) return;
+      const textEl = card.querySelector('p[class*="text-truncate"]');
+      if (!textEl) return;
+      const text = textEl.textContent?.trim();
+      if (!text || text.length < 5) return;
+      reviews.push(text);
+    });
+
+    // fallback: target text-truncate paragraphs directly
+    if (!reviews.length) {
+      revbox.querySelectorAll('p[class*="text-truncate"]').forEach(p => {
+        const t = p.textContent?.trim();
+        if (t && t.length > 5 && reviews.length < 4) reviews.push(t);
+      });
+    }
+
+    // last resort: short clean paragraphs without code
+    if (!reviews.length) {
+      revbox.querySelectorAll('p').forEach(p => {
+        const t = p.textContent?.trim();
+        if (t && t.length > 15 && t.length < 350 && !/function\s*\(|\$\(|\.ready/.test(t) && reviews.length < 3)
+          reviews.push(t);
+      });
+    }
+  }
+
+  const isIsraeli =
+    (language || '').includes('עברית') ||
+    (countryYear || '').includes('ישראל') ||
+    (genreInfo || genre || '').includes('ישראלי');
+
+  const d = {
+    mid, hebrewTitle, englishTitle,
+    genre: genreInfo || genre,
+    rating, plot, coverImg,
+    actors, director, duration, language, countryYear, releaseDate,
+    reviews, isIsraeli
+  };
+  detailCache[mid] = d;
+  return d;
+}
+
+// ── FETCH SHOWTIMES (filtered to TLV area) ─────────────
+// Exact names as used by seret.co.il (partial match via includes)
+const AREA_CITIES = ['תל-אביב', 'פתח-תקווה', 'רמת-גן', 'רמת-השרון'];
+
+async function fetchShowtimes(mid) {
+  const html = await getHtml(`/movies/showtimesajax.asp?MID=${mid}&AID=&DID=&CID=&SDT=`);
+  const doc  = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script,ins,noscript,iframe,[data-onpage],[data-adpath]').forEach(el => el.remove());
+  const main = doc.querySelector('[align="center"]') || doc.body;
+  if (!main) return '';
+
+  // Remove city sections not in our area
+  const cityEls = [...main.querySelectorAll('.cityname')];
+  cityEls.forEach(cityEl => {
+    const name = cityEl.textContent.trim();
+    if (AREA_CITIES.some(c => name.includes(c))) return;
+    // Collect this city el + all siblings until the next .cityname
+    const toRemove = [cityEl];
+    let node = cityEl.nextSibling;
+    while (node && !(node.nodeType === 1 && node.classList?.contains('cityname'))) {
+      toRemove.push(node);
+      node = node.nextSibling;
+    }
+    toRemove.forEach(n => n.parentNode?.removeChild(n));
+  });
+
+  return main.innerHTML;
+}
+
+// ── RENDER GRID ────────────────────────────────────────
+function renderGrid() {
+  const grid       = document.getElementById('grid');
+  const emptyState = document.getElementById('empty-state');
+
+  let list = allMovies.slice();
+  if (activeWeekFilter !== 'all') list = list.filter(m => String(m.week) === activeWeekFilter);
+  if (activeGenreFilter !== 'all') list = list.filter(m => matchesGenre(m, activeGenreFilter));
+  list.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+
+  if (list.length === 0 && allMovies.length > 0) {
+    grid.innerHTML = '';
+    emptyState.classList.add('show');
+    return;
+  }
+  emptyState.classList.remove('show');
+
+  grid.innerHTML = list.map((m, i) => {
+    const hasTitle = Boolean(m.hebrewTitle);
+    const rc = ratingClass(m.rating, m.duration);
+    return `
+    <div class="card" style="animation-delay:${i * 0.04}s" data-mid="${m.mid}">
+      ${hasTitle
+        ? `<img class="card-img" src="${m.posterImg}" alt="${m.englishName}" loading="lazy"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : ''}
+      <div class="img-placeholder" style="${hasTitle ? 'display:none' : ''}">${m.emoji}</div>
+      ${m.rating ? `
+        <div class="rating-badge ${rc}">
+          <span class="rating-num">${m.rating}</span>
+          <span class="rating-sub">/10</span>
+        </div>` : ''}
+      <span class="week-badge">שבוע ${WEEK_NAMES[m.week] || m.week}</span>
+      <div class="card-body">
+        ${hasTitle
+          ? `<div class="card-title">${m.hebrewTitle}</div>`
+          : `<div class="card-title shimmer" style="height:1.2em;width:85%"> </div>`}
+        ${m.genre ? `<span class="genre-badge">${m.genre}</span>` : ''}
+        ${m.releaseDate ? `<div class="release-info">${m.releaseDate}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── POPOVER ────────────────────────────────────────────
+function setTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${name}`));
+}
+
+function openPopover(mid) {
+  const movie = allMovies.find(m => m.mid === mid) || {};
+
+  document.getElementById('popTitleHe').textContent = movie.hebrewTitle || movie.englishName || '...';
+  document.getElementById('popTitleEn').textContent = movie.englishName || '';
+  document.getElementById('popGenre').textContent   = movie.genre || '';
+  const rEl = document.getElementById('popRating');
+  rEl.textContent = movie.rating ? `⭐ ${movie.rating}/10` : '';
+  rEl.className   = `pop-rating ${ratingClass(movie.rating, movie.duration)}`;
+  document.getElementById('popPoster').src = movie.posterImg || '';
+  document.getElementById('popHeroBg').style.backgroundImage = `url('${movie.coverImg || movie.posterImg}')`;
+  document.getElementById('popMeta').innerHTML = '';
+  ['plot','reviews','where'].forEach(t => {
+    document.getElementById(`tab-${t}`).innerHTML = '<p class="no-data">טוען...</p>';
+  });
+  setTab('plot');
+  document.getElementById('overlay').classList.add('open');
+  document.body.classList.add('pop-open');
+  // Reset any swipe transform
+  document.getElementById('popover').style.transform = '';
+
+  fetchMovieDetail(mid).then(d => {
+    document.getElementById('popTitleHe').textContent = d.hebrewTitle || movie.englishName;
+    document.getElementById('popTitleEn').textContent = d.englishTitle || '';
+    document.getElementById('popGenre').textContent   = d.genre || '';
+    const rEl2 = document.getElementById('popRating');
+    rEl2.textContent = d.rating ? `⭐ ${d.rating}/10` : '';
+    rEl2.className   = `pop-rating ${ratingClass(d.rating, d.duration)}`;
+    if (d.coverImg) document.getElementById('popHeroBg').style.backgroundImage = `url('${d.coverImg}')`;
+
+    const metas = [d.duration, d.language, d.countryYear, d.releaseDate].filter(Boolean);
+    document.getElementById('popMeta').innerHTML = metas.map(t => `<span class="pop-tag">${t}</span>`).join('');
+
+    const actorChips = d.actors
+      ? d.actors.split(/[,]|\s{2,}/).map(a => a.trim()).filter(a => a.length > 1)
+          .map(a => `<span class="actor-chip">${a}</span>`).join('')
+      : '';
+    document.getElementById('tab-plot').innerHTML = `
+      ${d.director ? `<p class="director-line">בימוי: <strong>${d.director}</strong></p>` : ''}
+      ${d.plot ? `<p class="plot-text">${d.plot}</p>` : `<p class="no-data">אין עלילה זמינה</p>`}
+      ${actorChips ? `<div class="actors-section"><h4>שחקנים</h4><div class="actors-list">${actorChips}</div></div>` : ''}
+      ${d.duration || d.countryYear ? `
+        <div class="meta-grid">
+          ${d.duration ? `<div class="meta-item"><div class="meta-label">אורך</div><div class="meta-value">${d.duration}</div></div>` : ''}
+          ${d.countryYear ? `<div class="meta-item"><div class="meta-label">מדינה / שנה</div><div class="meta-value">${d.countryYear}</div></div>` : ''}
+        </div>` : ''}`;
+
+    if (d.reviews && d.reviews.length > 0) {
+      document.getElementById('tab-reviews').innerHTML =
+        d.reviews.map(r => `<div class="review-card"><p class="review-text">${r}</p></div>`).join('') +
+        `<p style="text-align:center;margin-top:14px"><a href="${SERET}/movies/s_movies.asp?MID=${mid}#rev" target="_blank" style="color:var(--cyan);font-size:.8rem">כל הביקורות ב-seret.co.il ↗</a></p>`;
+    } else {
+      document.getElementById('tab-reviews').innerHTML =
+        `<div class="showtime-link"><a href="${SERET}/movies/s_movies.asp?MID=${mid}#rev" target="_blank">ביקורות ב-seret.co.il ↗</a></div>`;
+    }
+    loadShowtimesTab(mid);
+  }).catch(err => {
+    console.error('Detail error:', err);
+    document.getElementById('tab-plot').innerHTML = `<p class="no-data">שגיאה בטעינת פרטים</p>`;
+  });
+}
+
+async function loadShowtimesTab(mid) {
+  try {
+    const html = await fetchShowtimes(mid);
+    const el   = document.getElementById('tab-where');
+    if (html && html.replace(/<[^>]+>/g,'').trim().length > 20) {
+      el.innerHTML = `<div class="showtimes-wrap">${html}</div>
+        <p style="text-align:center;margin-top:12px">
+          <a href="${SERET}/movies/s_movies.asp?MID=${mid}#hours" target="_blank" style="color:var(--cyan);font-size:.8rem">
+            הצג הקרנות מעודכנות ↗</a></p>`;
+    } else throw new Error('empty');
+  } catch {
+    document.getElementById('tab-where').innerHTML =
+      `<div class="showtime-link">
+        <p>לוח הקרנות זמין ב-seret.co.il</p>
+        <a href="${SERET}/movies/s_movies.asp?MID=${mid}#hours" target="_blank">לחץ לצפות בלוח הקרנות ↗</a>
+      </div>`;
+  }
+}
+
+function closePop() {
+  const popEl = document.getElementById('popover');
+  popEl.style.transform = '';
+  document.getElementById('overlay').classList.remove('open');
+  document.body.classList.remove('pop-open');
+}
+
+// ── SWIPE-TO-CLOSE ─────────────────────────────────────
+(function() {
+  const popEl = document.getElementById('popover');
+  let startY = 0, startScrollTop = 0, dragging = false;
+
+  popEl.addEventListener('touchstart', e => {
+    const onHandle = e.target.closest('#popHandle, .pop-hero');
+    const scrollEl = document.querySelector('.pop-scroll');
+    if (!onHandle && scrollEl.scrollTop > 0) return;
+    startY = e.touches[0].clientY;
+    startScrollTop = scrollEl ? scrollEl.scrollTop : 0;
+    dragging = true;
+    popEl.style.transition = 'none';
+  }, {passive: true});
+
+  popEl.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 0) popEl.style.transform = `translateY(${dy}px)`;
+  }, {passive: true});
+
+  popEl.addEventListener('touchend', e => {
+    if (!dragging) return;
+    dragging = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    popEl.style.transition = '';
+    if (dy > 90) {
+      closePop();
+    } else {
+      popEl.style.transform = '';
+    }
+  });
+})();
+
+// ── EVENTS ─────────────────────────────────────────────
+document.getElementById('week-filters').addEventListener('click', e => {
+  const btn = e.target.closest('.fbtn');
+  if (!btn) return;
+  document.querySelectorAll('#week-filters .fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeWeekFilter = btn.dataset.week;
+  renderGrid();
+});
+
+document.getElementById('genre-filters').addEventListener('click', e => {
+  const btn = e.target.closest('.fbtn');
+  if (!btn) return;
+  document.querySelectorAll('#genre-filters .fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeGenreFilter = btn.dataset.genre;
+  renderGrid();
+});
+
+// Whole card is tappable
+document.getElementById('grid').addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (card) openPopover(card.dataset.mid);
+});
+
+document.getElementById('closeBtn').addEventListener('click', closePop);
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay')) closePop();
+});
+document.querySelector('.pop-tabs').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (btn) setTab(btn.dataset.tab);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
+
+// seret.co.il uses Windows-1255 encoding — Hebrew letters U+05D0-U+05EA
+// map linearly to bytes 0xE0-0xFA; must encode POST body accordingly
+function w1255encode(str) {
+  let out = '';
+  for (const ch of str) {
+    const c = ch.charCodeAt(0);
+    if (c >= 0x05D0 && c <= 0x05EA) {
+      out += '%' + (c - 0x05D0 + 0xE0).toString(16).toUpperCase();
+    } else if (c === 32) {
+      out += '+';
+    } else {
+      out += encodeURIComponent(ch);
+    }
+  }
+  return out;
+}
+
+// check if a movie MID has active showtimes (currently in cinema)
+async function hasActiveShowtimes(mid) {
+  try {
+    const r   = await fetch(`${SERET}/movies/showtimesajax.asp?MID=${mid}&AID=&DID=&CID=&SDT=`, {mode:'cors'});
+    const buf = await r.arrayBuffer();
+    const txt = new TextDecoder('windows-1255').decode(buf);
+    return txt.length > 300 && !txt.includes('אין הקרנות');
+  } catch { return false; }
+}
+
+// ── SERET SEARCH (POST to /movies/l_movies.asp, same as their form) ────────
+async function fetchSeretSearch(q) {
+  try {
+    const resp = await fetch(SERET + '/movies/l_movies.asp', {
+      method: 'POST', mode: 'cors',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `searchbar=${w1255encode(q)}&f_sType=movie&searchAction=`
+    });
+    if (!resp.ok) throw new Error(resp.status);
+    const buf = await resp.arrayBuffer();
+    const html = new TextDecoder('windows-1255').decode(buf);
+    const doc  = new DOMParser().parseFromString(html, 'text/html');
+
+    // when seret finds exactly one match it redirects to the movie detail page
+    // detect this: the landed URL contains s_movies.asp, or the page has h1.TitWhite22
+    const landedOnDetail = resp.url.includes('s_movies.asp') ||
+                           !!doc.querySelector('h1.TitWhite22');
+    if (landedOnDetail) {
+      const mid = (resp.url.match(/MID=(\d+)/i) ||
+                   (doc.querySelector('a[href*="s_movies.asp?MID="]')
+                      ?.getAttribute('href') || '').match(/MID=(\d+)/i) || [])[1];
+      if (!mid) return [];
+      const hebrewTitle = doc.querySelector('h1.TitWhite22 span, h1.TitWhite22')?.textContent?.trim() || q;
+      const local = allMovies.find(m => m.mid === mid);
+      const inCinema = !!local || await hasActiveShowtimes(mid);
+      return [{
+        mid,
+        hebrewTitle: local?.hebrewTitle || hebrewTitle,
+        englishName: local?.englishName || '',
+        posterImg:   local?.posterImg   || '',
+        genre:       local?.genre       || '',
+        rating:      local?.rating      || null,
+        inCinema
+      }];
+    }
+
+    const results = [];
+    const seen = new Set();
+
+    // seret renders: <a href="s_movies.asp?MID=N" title="English" class="cbtitg">עברית</a>
+    doc.querySelectorAll('a[href*="s_movies.asp?MID="]').forEach(link => {
+      const mid = (link.getAttribute('href') || '').match(/MID=(\d+)/i)?.[1];
+      if (!mid || seen.has(mid)) return;
+      const hebrewTitle = link.textContent?.trim();
+      if (!hebrewTitle || hebrewTitle.length < 2) return;
+      seen.add(mid);
+
+      const englishName = link.getAttribute('title') || '';
+      const parent = link.closest('div, td, span') || link.parentElement;
+      const imgEl  = parent?.querySelector('img[data-src*="movies"]') ||
+                     parent?.parentElement?.querySelector('img[data-src*="movies"]');
+      const folder = (imgEl?.getAttribute('data-src') || '').match(/\/movies\/([^\/]+)\//)?.[1];
+      const local  = allMovies.find(m => m.mid === mid);
+
+      results.push({
+        mid,
+        hebrewTitle:       local?.hebrewTitle || hebrewTitle,
+        englishName:       englishName         || local?.englishName || '',
+        posterImg:         local?.posterImg    || (folder ? `${SERET}/images/movies/${folder}/${folder}1.jpg` : ''),
+        genre:             local?.genre        || '',
+        rating:            local?.rating       || null,
+        inCinema:          !!local
+      });
+    });
+
+    // filter: keep only results whose title actually contains the query
+    // (prevents seret sidebar/nav links from leaking into results)
+    const ql = q.toLowerCase();
+    const filtered = results.filter(r =>
+      (r.hebrewTitle && r.hebrewTitle.includes(q)) ||
+      (r.englishName && r.englishName.toLowerCase().includes(ql))
+    );
+
+    // for filtered results not yet known to be in cinema, check showtimes in parallel
+    await Promise.allSettled(
+      filtered.filter(r => !r.inCinema).map(async r => {
+        r.inCinema = await hasActiveShowtimes(r.mid);
+      })
+    );
+
+    return filtered;
+  } catch(e) {
+    return [];
+  }
+}
+
+// ── SEARCH UI ───────────────────────────────────────────
+(function() {
+  const input = document.getElementById('searchInput');
+  const drop  = document.getElementById('searchDrop');
+  let timer, focusedIdx = -1;
+
+  function renderDrop(results, q, loading) {
+    const seretUrl = `https://www.seret.co.il/movies/l_movies.asp`;
+    const footer   = `<a class="sres-seret-link" href="${seretUrl}" target="_blank" rel="noopener"
+      onclick="this.href='${seretUrl}';this.method='POST';">🔗 כל התוצאות ב-seret.co.il ↗</a>`;
+
+    if (!results || !results.length) {
+      drop.innerHTML = `<div class="search-no-res">${loading ? '🔍 מחפש...' : 'לא נמצאו סרטים'}</div>${footer}`;
+      drop.hidden = false;
+      return;
+    }
+    drop.innerHTML = results.slice(0, 9).map((m, i) => `
+      <div class="sres${m.inCinema ? '' : ' sres-archive'}" data-mid="${m.mid}" data-i="${i}"
+           data-in-cinema="${m.inCinema ? '1' : '0'}">
+        <img class="sres-img" src="${m.posterImg}" alt="" loading="lazy" onerror="this.style.opacity=0">
+        <div class="sres-info">
+          <div class="sres-title">${m.hebrewTitle || m.englishName || ''}</div>
+          <div class="sres-genre">${m.genre || (m.inCinema ? '' : '<span class="sres-notcurrent">לא בקולנוע כעת</span>')}</div>
+        </div>
+        ${m.rating ? `<div class="sres-rating">⭐ ${m.rating}</div>` : ''}
+      </div>`).join('') + footer;
+    focusedIdx = -1;
+    drop.hidden = false;
+  }
+
+  function hideDrop() { drop.hidden = true; focusedIdx = -1; }
+
+  async function doSearch(q) {
+    if (q !== input.value.trim()) return;
+    const ql = q.toLowerCase();
+    const match = m =>
+      (m.hebrewTitle && m.hebrewTitle.includes(q)) ||
+      (m.englishName && m.englishName.toLowerCase().includes(ql));
+
+    // immediate local results
+    renderDrop(allMovies.filter(match), q, true);
+
+    // POST to seret (init() already loads hebrewTitles in background)
+    const seretResults = await fetchSeretSearch(q);
+
+    if (q !== input.value.trim()) return;
+
+    // merge: seret results lead (include archive), local data fills in details
+    const seen = new Set();
+    const merged = [];
+    (seretResults || []).forEach(r => { if (!seen.has(r.mid)) { seen.add(r.mid); merged.push(r); } });
+    allMovies.filter(match).forEach(m => {
+      if (!seen.has(m.mid)) { seen.add(m.mid); merged.push({...m, inCinema: true}); }
+    });
+
+    renderDrop(merged.length ? merged : null, q);
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (!q) { hideDrop(); return; }
+    timer = setTimeout(() => doSearch(q), 200);
+  });
+
+  input.addEventListener('keydown', e => {
+    if (drop.hidden) return;
+    const items = [...drop.querySelectorAll('.sres')];
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusedIdx = Math.min(focusedIdx + 1, items.length - 1);
+      items.forEach((el, i) => el.classList.toggle('focused', i === focusedIdx));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      focusedIdx = Math.max(focusedIdx - 1, 0);
+      items.forEach((el, i) => el.classList.toggle('focused', i === focusedIdx));
+    } else if (e.key === 'Enter' && focusedIdx >= 0 && items[focusedIdx]) {
+      items[focusedIdx].click();
+    } else if (e.key === 'Escape') { hideDrop(); input.blur(); }
+  });
+
+  drop.addEventListener('click', e => {
+    if (e.target.closest('.sres-seret-link')) return;
+    const item = e.target.closest('[data-mid]');
+    if (!item) return;
+    if (item.dataset.inCinema === '1') {
+      openPopover(item.dataset.mid);
+    } else {
+      window.open(`${SERET}/movies/s_movies.asp?MID=${item.dataset.mid}`, '_blank', 'noopener');
+    }
+    hideDrop();
+    input.value = '';
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#searchWrap')) hideDrop();
+  });
+})();
+
+// ── INIT ───────────────────────────────────────────────
+(async function init() {
+  try {
+    const movies = await fetchMovieList();
+    if (!movies.length) throw new Error('No movies');
+
+    allMovies = movies;
+    document.getElementById('loading').classList.add('hidden');
+    renderGrid();
+
+    const BATCH = 5;
+    for (let i = 0; i < movies.length; i += BATCH) {
+      await Promise.allSettled(movies.slice(i, i + BATCH).map(async m => {
+        try {
+          const d = await fetchMovieDetail(m.mid);
+          m.hebrewTitle = d.hebrewTitle || m.englishName;
+          m.genre       = d.genre || '';
+          m.rating      = d.rating || null;
+          m.duration    = d.duration || '';
+          m.emoji       = genreEmoji(d.genre);
+          m.releaseDate = d.releaseDate || '';
+          m.isIsraeli   = d.isIsraeli || false;
+          if (d.coverImg) m.coverImg = d.coverImg;
+        } catch {
+          m.hebrewTitle = m.englishName;
+        }
+      }));
+      rebuildGenreFilters();
+      renderGrid();
+    }
+  } catch (err) {
+    console.error('Init error:', err);
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('error-msg').classList.add('show');
+  }
+})();
+</script>
+</body>
+</html>
