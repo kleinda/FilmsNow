@@ -531,6 +531,7 @@ function rebuildGenreFilters() {
 // ── FETCH MOVIE LIST ───────────────────────────────────
 async function fetchMovieList() {
   const html = await getHtml('/movies/newmovies.asp');
+  console.log('[seret] newmovies first 300 chars:', html.slice(0, 300));
   const movies = [];
   const seen = new Set();
 
