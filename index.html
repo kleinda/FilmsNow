@@ -443,7 +443,7 @@ let activeGenreFilter = 'all';
 
 // ── FETCH HTML (windows-1255) ──────────────────────────
 async function getHtml(path) {
-  const resp = await fetch(SERET + path, {mode:'cors'});
+  const resp = await fetch('/api/proxy?url=' + encodeURIComponent(SERET + path));
   if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${path}`);
   const buf = await resp.arrayBuffer();
   return new TextDecoder('windows-1255').decode(buf);
@@ -918,7 +918,7 @@ function w1255encode(str) {
 // check if a movie MID has active showtimes (currently in cinema)
 async function hasActiveShowtimes(mid) {
   try {
-    const r   = await fetch(`${SERET}/movies/showtimesajax.asp?MID=${mid}&AID=&DID=&CID=&SDT=`, {mode:'cors'});
+    const r   = await fetch('/api/proxy?url=' + encodeURIComponent(`${SERET}/movies/showtimesajax.asp?MID=${mid}&AID=&DID=&CID=&SDT=`));
     const buf = await r.arrayBuffer();
     const txt = new TextDecoder('windows-1255').decode(buf);
     return txt.length > 300 && !txt.includes('אין הקרנות');
@@ -928,22 +928,22 @@ async function hasActiveShowtimes(mid) {
 // ── SERET SEARCH (POST to /movies/l_movies.asp, same as their form) ────────
 async function fetchSeretSearch(q) {
   try {
-    const resp = await fetch(SERET + '/movies/l_movies.asp', {
-      method: 'POST', mode: 'cors',
+    const resp = await fetch('/api/proxy?url=' + encodeURIComponent(SERET + '/movies/l_movies.asp'), {
+      method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: `searchbar=${w1255encode(q)}&f_sType=movie&searchAction=`
     });
     if (!resp.ok) throw new Error(resp.status);
+    const finalUrl = resp.headers.get('X-Final-Url') || '';
     const buf = await resp.arrayBuffer();
     const html = new TextDecoder('windows-1255').decode(buf);
     const doc  = new DOMParser().parseFromString(html, 'text/html');
 
     // when seret finds exactly one match it redirects to the movie detail page
-    // detect this: the landed URL contains s_movies.asp, or the page has h1.TitWhite22
-    const landedOnDetail = resp.url.includes('s_movies.asp') ||
+    const landedOnDetail = finalUrl.includes('s_movies.asp') ||
                            !!doc.querySelector('h1.TitWhite22');
     if (landedOnDetail) {
-      const mid = (resp.url.match(/MID=(\d+)/i) ||
+      const mid = (finalUrl.match(/MID=(\d+)/i) ||
                    (doc.querySelector('a[href*="s_movies.asp?MID="]')
                       ?.getAttribute('href') || '').match(/MID=(\d+)/i) || [])[1];
       if (!mid) return [];
