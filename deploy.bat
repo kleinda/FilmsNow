@@ -1,16 +1,12 @@
 @echo off
 cd /d "%~dp0"
-
 echo === FilmsNow Deploy ===
 echo.
-
-set MSG=update
-set /p MSG="Commit message (Enter to skip): "
-
+set COMMITMSG=update
+set /p COMMITMSG=Commit message (press Enter for default):
 git add -A
-git commit -m "%MSG%"
+git commit -m "%COMMITMSG%"
 git push
-
 echo.
-echo Deploy done - Vercel updates in ~30 sec
+echo Done. Vercel updates in about 30 seconds.
 pause
