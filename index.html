@@ -691,6 +691,55 @@ async function fetchShowtimes(mid) {
   return main.innerHTML;
 }
 
+// ── UPDATE SINGLE CARD IN PLACE ────────────────────────
+function updateCardInPlace(m) {
+  const card = document.querySelector(`.card[data-mid="${m.mid}"]`);
+  if (!card) return;
+  const rc = ratingClass(m.rating, m.duration);
+
+  // title
+  let titleEl = card.querySelector('.card-title');
+  if (titleEl && m.hebrewTitle) {
+    titleEl.textContent = m.hebrewTitle;
+    titleEl.classList.remove('shimmer');
+    titleEl.style.cssText = '';
+  }
+
+  // poster
+  if (m.posterImg) {
+    let img = card.querySelector('.card-img');
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'card-img'; img.loading = 'lazy';
+      img.onerror = function() { this.style.display='none'; const ph=this.nextElementSibling; if(ph) ph.style.display='flex'; };
+      card.insertBefore(img, card.firstChild);
+    }
+    if (img.src !== m.posterImg) { img.src = m.posterImg; img.alt = m.englishName || ''; }
+    const ph = card.querySelector('.img-placeholder');
+    if (ph) ph.style.display = 'none';
+  }
+
+  // rating badge
+  let rb = card.querySelector('.rating-badge');
+  if (m.rating) {
+    if (!rb) {
+      rb = document.createElement('div');
+      const wb = card.querySelector('.week-badge');
+      card.insertBefore(rb, wb || card.querySelector('.card-body'));
+    }
+    rb.className = `rating-badge ${rc}`;
+    rb.innerHTML = `<span class="rating-num">${m.rating}</span><span class="rating-sub">/10</span>`;
+  }
+
+  // genre badge
+  const body = card.querySelector('.card-body');
+  if (body && m.genre) {
+    let gb = body.querySelector('.genre-badge');
+    if (!gb) { gb = document.createElement('span'); gb.className = 'genre-badge'; body.appendChild(gb); }
+    gb.textContent = m.genre;
+  }
+}
+
 // ── RENDER GRID ────────────────────────────────────────
 function renderGrid() {
   const grid       = document.getElementById('grid');
@@ -1119,25 +1168,32 @@ async function fetchSeretSearch(q) {
     document.getElementById('loading').classList.add('hidden');
     renderGrid();
 
-    const BATCH = 5;
+    const isMobile = navigator.maxTouchPoints > 0 || /Mobi|Android/i.test(navigator.userAgent);
+    const BATCH = isMobile ? 1 : 4;
+
+    async function loadDetail(m) {
+      try {
+        const d = await fetchMovieDetail(m.mid);
+        m.hebrewTitle = d.hebrewTitle || m.englishName;
+        m.genre       = d.genre || '';
+        m.rating      = d.rating || null;
+        m.duration    = d.duration || '';
+        m.emoji       = genreEmoji(d.genre);
+        m.releaseDate = d.releaseDate || '';
+        m.isIsraeli   = d.isIsraeli || false;
+        if (d.coverImg) m.coverImg = d.coverImg;
+        updateCardInPlace(m);
+        if (m.genre) rebuildGenreFilters();
+      } catch(e) {
+        console.error('detail fail MID=' + m.mid, e?.message || e);
+        m.hebrewTitle = m.englishName || '—';
+        updateCardInPlace(m);
+      }
+    }
+
     for (let i = 0; i < movies.length; i += BATCH) {
-      await Promise.allSettled(movies.slice(i, i + BATCH).map(async m => {
-        try {
-          const d = await fetchMovieDetail(m.mid);
-          m.hebrewTitle = d.hebrewTitle || m.englishName;
-          m.genre       = d.genre || '';
-          m.rating      = d.rating || null;
-          m.duration    = d.duration || '';
-          m.emoji       = genreEmoji(d.genre);
-          m.releaseDate = d.releaseDate || '';
-          m.isIsraeli   = d.isIsraeli || false;
-          if (d.coverImg) m.coverImg = d.coverImg;
-        } catch {
-          m.hebrewTitle = m.englishName;
-        }
-      }));
-      rebuildGenreFilters();
-      renderGrid();
+      await Promise.allSettled(movies.slice(i, i + BATCH).map(loadDetail));
+      if (isMobile && i + BATCH < movies.length) await new Promise(r => setTimeout(r, 300));
     }
   } catch (err) {
     console.error('Init error:', err);
