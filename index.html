@@ -788,7 +788,9 @@ function renderGrid() {
 
   grid.innerHTML = list.map((m, i) => {
     const hasTitle = Boolean(m.hebrewTitle);
+    const wk = movieWeek(m);
     const rc = ratingClass(m.rating, m.duration);
+    const showRating = m.rating && parseFloat(m.rating) > 0 && wk !== 'soon';
     return `
     <div class="card" style="animation-delay:${i * 0.04}s" data-mid="${m.mid}">
       ${hasTitle
@@ -796,12 +798,12 @@ function renderGrid() {
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
         : ''}
       <div class="img-placeholder" style="${hasTitle ? 'display:none' : ''}">${m.emoji}</div>
-      ${m.rating ? `
+      ${showRating ? `
         <div class="rating-badge ${rc}">
           <span class="rating-num">${m.rating}</span>
           <span class="rating-sub">/10</span>
         </div>` : ''}
-      ${(wk => wk >= 1 && wk <= 3 ? `<span class="week-badge">שבוע ${WEEK_NAMES[wk]}</span>` : '')(movieWeek(m))}
+      ${wk >= 1 && wk <= 4 ? `<span class="week-badge">שבוע ${WEEK_NAMES[wk]}</span>` : ''}
       <div class="card-body">
         ${hasTitle
           ? `<div class="card-title">${m.hebrewTitle}</div>`
