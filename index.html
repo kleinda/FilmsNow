@@ -757,7 +757,7 @@ function renderGrid() {
   if (activeGenreFilter !== 'all') list = list.filter(m => matchesGenre(m, activeGenreFilter));
   list.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
 
-  // update active filter button count before any early return
+  // update active button to show count matching the grid
   document.querySelectorAll('#week-filters .fbtn, #genre-filters .fbtn').forEach(b => {
     b.textContent = b.dataset.label || b.textContent;
   });
@@ -944,6 +944,10 @@ document.getElementById('week-filters').addEventListener('click', e => {
   document.querySelectorAll('#week-filters .fbtn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   activeWeekFilter = btn.dataset.week;
+  // reset genre filter so week filter shows full results
+  activeGenreFilter = 'all';
+  document.querySelectorAll('#genre-filters .fbtn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#genre-filters .fbtn[data-genre="all"]').classList.add('active');
   renderGrid();
 });
 
@@ -953,6 +957,10 @@ document.getElementById('genre-filters').addEventListener('click', e => {
   document.querySelectorAll('#genre-filters .fbtn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   activeGenreFilter = btn.dataset.genre;
+  // reset week filter so genre filter shows full results
+  activeWeekFilter = 'all';
+  document.querySelectorAll('#week-filters .fbtn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#week-filters .fbtn[data-week="all"]').classList.add('active');
   renderGrid();
 });
 
