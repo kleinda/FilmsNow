@@ -366,15 +366,15 @@ header{
   <div class="filter-rows">
     <div class="filter-row" id="week-filters">
       <span class="filter-label">שבוע:</span>
-      <button class="fbtn active" data-week="all">הכל</button>
-      <button class="fbtn" data-week="1">ראשון</button>
-      <button class="fbtn" data-week="2">שני</button>
-      <button class="fbtn" data-week="3">שלישי</button>
-      <button class="fbtn" data-week="soon">בקרוב</button>
+      <button class="fbtn active" data-week="all" data-label="הכל">הכל</button>
+      <button class="fbtn" data-week="1" data-label="ראשון">ראשון</button>
+      <button class="fbtn" data-week="2" data-label="שני">שני</button>
+      <button class="fbtn" data-week="3" data-label="שלישי">שלישי</button>
+      <button class="fbtn" data-week="soon" data-label="בקרוב">בקרוב</button>
     </div>
     <div class="filter-row" id="genre-filters">
       <span class="filter-label">סוג:</span>
-      <button class="fbtn active" data-genre="all">הכל</button>
+      <button class="fbtn active" data-genre="all" data-label="הכל">הכל</button>
     </div>
   </div>
   <div class="search-wrap" id="searchWrap">
@@ -525,6 +525,7 @@ function rebuildGenreFilters() {
       const btn = document.createElement('button');
       btn.className = 'fbtn' + (group.label === 'ישראלי' ? ' genre-israeli' : '');
       btn.dataset.genre = group.label;
+      btn.dataset.label = group.label;
       btn.textContent = group.label;
       container.appendChild(btn);
     }
@@ -795,6 +796,15 @@ function renderGrid() {
       </div>
     </div>`;
   }).join('');
+
+  // update active filter button to show count
+  document.querySelectorAll('#week-filters .fbtn, #genre-filters .fbtn').forEach(b => {
+    b.textContent = b.dataset.label || b.textContent;
+  });
+  const activeWeekBtn  = document.querySelector('#week-filters .fbtn.active');
+  const activeGenreBtn = document.querySelector('#genre-filters .fbtn.active');
+  if (activeWeekBtn  && activeWeekFilter  !== 'all') activeWeekBtn.textContent  = `${activeWeekBtn.dataset.label} ${list.length}`;
+  if (activeGenreBtn && activeGenreFilter !== 'all') activeGenreBtn.textContent = `${activeGenreBtn.dataset.label} ${list.length}`;
 }
 
 // ── POPOVER ────────────────────────────────────────────
