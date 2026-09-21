@@ -199,7 +199,12 @@ async function main() {
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   const out = path.join(__dirname, 'movies.json');
   fs.writeFileSync(out, JSON.stringify(movies, null, 2), 'utf8');
-  console.log(`\n\n  Done! ${movies.length} movies saved in ${elapsed}s\n`);
+
+  const d = new Date();
+  const generatedAt = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+  fs.writeFileSync(path.join(__dirname, 'meta.json'), JSON.stringify({ generatedAt }), 'utf8');
+
+  console.log(`\n\n  Done! ${movies.length} movies saved in ${elapsed}s — ${generatedAt}\n`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

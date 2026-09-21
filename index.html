@@ -357,7 +357,7 @@ header{
 <header>
   <div class="header-brand">
     <div class="site-title">🎬 הסרטים בקולנוע</div>
-    <div class="site-author"><span class="tm-badge">TM</span> דודי</div>
+    <div class="site-author"><span class="tm-badge">TM</span> דודי &nbsp;·&nbsp; נכון ל: <span id="generated-date">—</span></div>
   </div>
   <div class="filter-rows">
     <div class="filter-row" id="week-filters">
@@ -1205,6 +1205,15 @@ function cleanQuery(s) {
 // ── INIT ───────────────────────────────────────────────
 (async function init() {
   try {
+    // load generation date from meta.json
+    try {
+      const mr = await fetch('/meta.json');
+      if (mr.ok) {
+        const meta = await mr.json();
+        if (meta.generatedAt) document.getElementById('generated-date').textContent = meta.generatedAt;
+      }
+    } catch {}
+
     // 1. try pre-generated static JSON (fast, no CORS, works on mobile)
     let fromJson = false;
     try {

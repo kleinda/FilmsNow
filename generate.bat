@@ -9,7 +9,7 @@ if errorlevel 1 (
 )
 echo.
 echo === Deploying to Vercel ===
-git add movies.json index.html GUIDE.md
+git add movies.json meta.json index.html GUIDE.md
 git commit -m "update movies data"
 git push
 echo.
