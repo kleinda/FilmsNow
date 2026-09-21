@@ -742,16 +742,19 @@ function renderGrid() {
   const grid       = document.getElementById('grid');
   const emptyState = document.getElementById('empty-state');
 
+  const today = new Date(); today.setHours(0,0,0,0);
+  function isSoon(m) {
+    if (!m.releaseDate) return false;
+    const p = m.releaseDate.split(' ')[0].split('/');
+    return p.length === 3 && new Date(+p[2], +p[1]-1, +p[0]) > today;
+  }
+
   let list = allMovies.slice();
   if (activeWeekFilter === 'soon') {
-    const today = new Date(); today.setHours(0,0,0,0);
-    list = list.filter(m => {
-      if (!m.releaseDate) return false;
-      const p = m.releaseDate.split(' ')[0].split('/');
-      if (p.length !== 3) return false;
-      return new Date(+p[2], +p[1]-1, +p[0]) > today;
-    });
-  } else if (activeWeekFilter !== 'all') {
+    list = list.filter(isSoon);
+  } else if (activeWeekFilter === 'all') {
+    list = list.filter(m => !isSoon(m)); // "הכל" = currently showing only
+  } else {
     list = list.filter(m => String(m.week) === activeWeekFilter);
   }
   if (activeGenreFilter !== 'all') list = list.filter(m => matchesGenre(m, activeGenreFilter));
