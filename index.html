@@ -746,19 +746,25 @@ function renderGrid() {
   const emptyState = document.getElementById('empty-state');
 
   const today = new Date(); today.setHours(0,0,0,0);
-  function isSoon(m) {
-    if (!m.releaseDate) return false;
+  function movieWeek(m) {
+    if (!m.releaseDate) return m.week || 99;
     const p = m.releaseDate.split(' ')[0].split('/');
-    return p.length === 3 && new Date(+p[2], +p[1]-1, +p[0]) > today;
+    if (p.length !== 3) return m.week || 99;
+    const daysAgo = Math.floor((today - new Date(+p[2], +p[1]-1, +p[0])) / 86400000);
+    if (daysAgo < 0)  return 'soon';
+    if (daysAgo < 7)  return 1;
+    if (daysAgo < 14) return 2;
+    if (daysAgo < 21) return 3;
+    return m.week || 99;
   }
 
   let list = allMovies.slice();
   if (activeWeekFilter === 'soon') {
-    list = list.filter(isSoon);
+    list = list.filter(m => movieWeek(m) === 'soon');
   } else if (activeWeekFilter === 'all') {
-    list = list.filter(m => !isSoon(m)); // "הכל" = currently showing only
+    list = list.filter(m => movieWeek(m) !== 'soon');
   } else {
-    list = list.filter(m => String(m.week) === activeWeekFilter);
+    list = list.filter(m => String(movieWeek(m)) === activeWeekFilter);
   }
   if (activeGenreFilter !== 'all') list = list.filter(m => matchesGenre(m, activeGenreFilter));
   list.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
@@ -794,7 +800,7 @@ function renderGrid() {
           <span class="rating-num">${m.rating}</span>
           <span class="rating-sub">/10</span>
         </div>` : ''}
-      <span class="week-badge">שבוע ${WEEK_NAMES[m.week] || m.week}</span>
+      ${(wk => wk >= 1 && wk <= 3 ? `<span class="week-badge">שבוע ${WEEK_NAMES[wk]}</span>` : '')(movieWeek(m))}
       <div class="card-body">
         ${hasTitle
           ? `<div class="card-title">${m.hebrewTitle}</div>`
