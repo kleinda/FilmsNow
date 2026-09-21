@@ -103,12 +103,12 @@ header{
 .card{
   position:relative;border-radius:var(--radius);overflow:hidden;
   background:var(--card-bg);cursor:pointer;
-  box-shadow:0 4px 20px rgba(0,0,0,.5),0 0 0 1px rgba(99,179,237,.18),0 0 18px rgba(99,179,237,.12);
+  box-shadow:0 4px 20px rgba(0,0,0,.5),0 0 0 1px rgba(var(--gc),.25),0 0 20px rgba(var(--gc),.15);
   animation:cardIn .4s ease both;transition:transform .2s,box-shadow .2s;
   touch-action:manipulation
 }
 @keyframes cardIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@media(hover:hover){.card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 0 1.5px rgba(99,179,237,.55),0 0 28px rgba(99,179,237,.28)}}
+@media(hover:hover){.card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 0 2px rgba(var(--gh),.8),0 0 32px rgba(var(--gh),.4)}}
 .card:active{opacity:.85;transform:scale(.98)}
 .card-img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--card-bg)}
 .img-placeholder{
@@ -434,6 +434,7 @@ header{
 <script>
 const SERET = 'https://www.seret.co.il';
 const WEEK_NAMES = ['','ראשון','שני','שלישי','ותיקים'];
+const GLOW_COLORS = ['56,189,248','167,139,250','244,114,182','52,211,153','251,146,60','251,191,36','251,113,133','129,140,248'];
 
 let allMovies = [];
 let detailCache = {};
@@ -791,8 +792,10 @@ function renderGrid() {
     const wk = movieWeek(m);
     const rc = ratingClass(m.rating, m.duration);
     const showRating = m.rating && parseFloat(m.rating) > 0 && wk !== 'soon';
+    const ci = i % GLOW_COLORS.length;
+    const ch = (ci + 3) % GLOW_COLORS.length;
     return `
-    <div class="card" style="animation-delay:${i * 0.04}s" data-mid="${m.mid}">
+    <div class="card" style="animation-delay:${i * 0.04}s;--gc:${GLOW_COLORS[ci]};--gh:${GLOW_COLORS[ch]}" data-mid="${m.mid}">
       ${hasTitle
         ? `<img class="card-img" src="${m.posterImg}" alt="${m.englishName}" loading="lazy"
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
