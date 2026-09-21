@@ -370,6 +370,7 @@ header{
       <button class="fbtn" data-week="1">ראשון</button>
       <button class="fbtn" data-week="2">שני</button>
       <button class="fbtn" data-week="3">שלישי</button>
+      <button class="fbtn" data-week="soon">בקרוב</button>
     </div>
     <div class="filter-row" id="genre-filters">
       <span class="filter-label">סוג:</span>
@@ -748,7 +749,17 @@ function renderGrid() {
   const emptyState = document.getElementById('empty-state');
 
   let list = allMovies.slice();
-  if (activeWeekFilter !== 'all') list = list.filter(m => String(m.week) === activeWeekFilter);
+  if (activeWeekFilter === 'soon') {
+    const today = new Date(); today.setHours(0,0,0,0);
+    list = list.filter(m => {
+      if (!m.releaseDate) return false;
+      const p = m.releaseDate.split('/');
+      if (p.length !== 3) return false;
+      return new Date(+p[2], +p[1]-1, +p[0]) > today;
+    });
+  } else if (activeWeekFilter !== 'all') {
+    list = list.filter(m => String(m.week) === activeWeekFilter);
+  }
   if (activeGenreFilter !== 'all') list = list.filter(m => matchesGenre(m, activeGenreFilter));
   list.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
 
