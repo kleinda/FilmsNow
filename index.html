@@ -343,12 +343,6 @@ header{
 .search-no-res{padding:20px 16px;text-align:center;color:var(--muted);font-size:.88rem}
 .sres-archive{opacity:.7}
 .sres-notcurrent{color:var(--gold);font-size:.72rem}
-.sres-seret-link{
-  display:block;padding:10px 16px;text-align:center;
-  font-size:.8rem;color:var(--cyan);text-decoration:none;
-  border-top:1px solid var(--border);opacity:.8
-}
-.sres-seret-link:hover{opacity:1}
 
 @media(max-width:700px){
   .search-wrap{width:100%}
@@ -361,7 +355,6 @@ header{
 <header>
   <div class="header-brand">
     <div class="site-title">🎬 הסרטים בקולנוע</div>
-    <div class="site-subtitle">עדכון אוטומטי מ-seret.co.il</div>
   </div>
   <div class="filter-rows">
     <div class="filter-row" id="week-filters">
@@ -388,12 +381,12 @@ header{
 
 <div id="loading">
   <div class="spin"></div>
-  <div class="load-text">טוען סרטים מ-seret.co.il...</div>
+  <div class="load-text">טוען סרטים...</div>
 </div>
 
 <div id="error-msg">
   <p style="font-size:1.2rem;margin-bottom:12px">לא ניתן לטעון נתונים</p>
-  <p>ניתן לצפות בסרטים ישירות ב: <a href="https://www.seret.co.il/movies/newmovies.asp" target="_blank">seret.co.il ↗</a></p>
+  <p>יש לנסות שוב מאוחר יותר</p>
 </div>
 
 <div id="grid"></div>
@@ -501,12 +494,12 @@ function ratingClass(r, duration) {
 // ── GENRE FILTER ───────────────────────────────────────
 // Consolidated categories — order determines button order
 const GENRE_GROUPS = [
-  { label: 'ישראלי', match: m => m.isIsraeli },
-  { label: 'ילדים',  match: m => /אנימ|ילד|משפח/i.test(m.genre) },
-  { label: 'קומדיה', match: m => /קומד/i.test(m.genre) },
-  { label: 'דרמה',   match: m => /דרמה|רומנ|אהבה|ביוגר|תיעוד/i.test(m.genre) },
-  { label: 'מתח',    match: m => /פעולה|אקשן|מתח|ריגול|בלש|מסתורין|מלחמה/i.test(m.genre) },
-  { label: 'אימה',   match: m => /אימה|מדע.בדיוני|sci.fi|פנטזיה/i.test(m.genre) },
+  { label: 'ישראלי',  match: m => m.isIsraeli || /ישראלי/i.test(m.genre) },
+  { label: 'אנימציה', match: m => /אנימ|ילד|משפח/i.test(m.genre) },
+  { label: 'קומדיה',  match: m => /קומד/i.test(m.genre) },
+  { label: 'דרמה',    match: m => /דרמה|רומנ|אהבה|ביוגר|תיעוד/i.test(m.genre) },
+  { label: 'מתח',     match: m => /פעולה|אקשן|מתח|ריגול|בלש|מסתורין|מלחמה/i.test(m.genre) },
+  { label: 'אימה',    match: m => /אימה|מדע.בדיוני|sci.fi|פנטזיה/i.test(m.genre) },
 ];
 
 function matchesGenre(m, filter) {
@@ -764,6 +757,15 @@ function renderGrid() {
   if (activeGenreFilter !== 'all') list = list.filter(m => matchesGenre(m, activeGenreFilter));
   list.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
 
+  // update active filter button count before any early return
+  document.querySelectorAll('#week-filters .fbtn, #genre-filters .fbtn').forEach(b => {
+    b.textContent = b.dataset.label || b.textContent;
+  });
+  const activeWeekBtn  = document.querySelector('#week-filters .fbtn.active');
+  const activeGenreBtn = document.querySelector('#genre-filters .fbtn.active');
+  if (activeWeekBtn)  activeWeekBtn.textContent  = `${activeWeekBtn.dataset.label} ${list.length}`;
+  if (activeGenreBtn) activeGenreBtn.textContent = `${activeGenreBtn.dataset.label} ${list.length}`;
+
   if (list.length === 0 && allMovies.length > 0) {
     grid.innerHTML = '';
     emptyState.classList.add('show');
@@ -797,14 +799,6 @@ function renderGrid() {
     </div>`;
   }).join('');
 
-  // update active filter button to show count
-  document.querySelectorAll('#week-filters .fbtn, #genre-filters .fbtn').forEach(b => {
-    b.textContent = b.dataset.label || b.textContent;
-  });
-  const activeWeekBtn  = document.querySelector('#week-filters .fbtn.active');
-  const activeGenreBtn = document.querySelector('#genre-filters .fbtn.active');
-  if (activeWeekBtn  && activeWeekFilter  !== 'all') activeWeekBtn.textContent  = `${activeWeekBtn.dataset.label} ${list.length}`;
-  if (activeGenreBtn && activeGenreFilter !== 'all') activeGenreBtn.textContent = `${activeGenreBtn.dataset.label} ${list.length}`;
 }
 
 // ── POPOVER ────────────────────────────────────────────
@@ -852,7 +846,7 @@ function openPopover(mid) {
       : '';
     document.getElementById('tab-plot').innerHTML = `
       ${d.director ? `<p class="director-line">בימוי: <strong>${d.director}</strong></p>` : ''}
-      ${d.plot ? `<p class="plot-text">${d.plot}</p>` : `<div class="showtime-link"><a href="${SERET}/movies/s_movies.asp?MID=${mid}" target="_blank" rel="noopener">צפה בעלילה ב-seret.co.il ↗</a></div>`}
+      ${d.plot ? `<p class="plot-text">${d.plot}</p>` : `<div class="showtime-link"><a href="${SERET}/movies/s_movies.asp?MID=${mid}" target="_blank" rel="noopener">קרא עוד על הסרט ↗</a></div>`}
       ${actorChips ? `<div class="actors-section"><h4>שחקנים</h4><div class="actors-list">${actorChips}</div></div>` : ''}
       ${d.duration || d.countryYear ? `
         <div class="meta-grid">
@@ -863,10 +857,10 @@ function openPopover(mid) {
     if (d.reviews && d.reviews.length > 0) {
       document.getElementById('tab-reviews').innerHTML =
         d.reviews.map(r => `<div class="review-card"><p class="review-text">${r}</p></div>`).join('') +
-        `<p style="text-align:center;margin-top:14px"><a href="${SERET}/movies/s_movies.asp?MID=${mid}#rev" target="_blank" style="color:var(--cyan);font-size:.8rem">כל הביקורות ב-seret.co.il ↗</a></p>`;
+        `<p style="text-align:center;margin-top:14px"><a href="${SERET}/movies/s_movies.asp?MID=${mid}#rev" target="_blank" style="color:var(--cyan);font-size:.8rem">כל הביקורות ↗</a></p>`;
     } else {
       document.getElementById('tab-reviews').innerHTML =
-        `<div class="showtime-link"><a href="${SERET}/movies/s_movies.asp?MID=${mid}#rev" target="_blank">ביקורות ב-seret.co.il ↗</a></div>`;
+        `<div class="showtime-link"><a href="${SERET}/movies/s_movies.asp?MID=${mid}#rev" target="_blank">ביקורות ↗</a></div>`;
     }
     if (allMovies.some(m => m.mid === mid)) {
       loadShowtimesTab(mid);
@@ -877,7 +871,7 @@ function openPopover(mid) {
   }).catch(err => {
     console.error('Detail error:', err);
     const url = `${SERET}/movies/s_movies.asp?MID=${mid}`;
-    const link = `<div class="showtime-link"><a href="${url}" target="_blank" rel="noopener">פתח פרטי הסרט ב-seret.co.il ↗</a></div>`;
+    const link = `<div class="showtime-link"><a href="${url}" target="_blank" rel="noopener">פרטי הסרט ↗</a></div>`;
     document.getElementById('tab-plot').innerHTML    = link;
     document.getElementById('tab-reviews').innerHTML = link;
     document.getElementById('tab-where').innerHTML   = link;
@@ -897,8 +891,7 @@ async function loadShowtimesTab(mid) {
   } catch {
     document.getElementById('tab-where').innerHTML =
       `<div class="showtime-link">
-        <p>לוח הקרנות זמין ב-seret.co.il</p>
-        <a href="${SERET}/movies/s_movies.asp?MID=${mid}#hours" target="_blank">לחץ לצפות בלוח הקרנות ↗</a>
+        <a href="${SERET}/movies/s_movies.asp?MID=${mid}#hours" target="_blank">לוח הקרנות ↗</a>
       </div>`;
   }
 }
@@ -1103,12 +1096,8 @@ function cleanQuery(s) {
   let timer, focusedIdx = -1;
 
   function renderDrop(results, q, loading) {
-    const seretUrl = `https://www.seret.co.il/movies/l_movies.asp`;
-    const footer   = `<a class="sres-seret-link" href="${seretUrl}" target="_blank" rel="noopener"
-      onclick="this.href='${seretUrl}';this.method='POST';">🔗 כל התוצאות ב-seret.co.il ↗</a>`;
-
     if (!results || !results.length) {
-      drop.innerHTML = `<div class="search-no-res">${loading ? '🔍 מחפש...' : 'לא נמצאו סרטים'}</div>${footer}`;
+      drop.innerHTML = `<div class="search-no-res">${loading ? '🔍 מחפש...' : 'לא נמצאו סרטים'}</div>`;
       drop.hidden = false;
       return;
     }
@@ -1121,7 +1110,7 @@ function cleanQuery(s) {
           <div class="sres-genre">${m.genre || (m.inCinema ? '' : '<span class="sres-notcurrent">לא בקולנוע כעת</span>')}</div>
         </div>
         ${m.rating ? `<div class="sres-rating">⭐ ${m.rating}</div>` : ''}
-      </div>`).join('') + footer;
+      </div>`).join('');
     focusedIdx = -1;
     drop.hidden = false;
   }
@@ -1187,7 +1176,6 @@ function cleanQuery(s) {
   });
 
   drop.addEventListener('click', e => {
-    if (e.target.closest('.sres-seret-link')) return;
     const item = e.target.closest('[data-mid]');
     if (!item) return;
     openPopover(item.dataset.mid);
