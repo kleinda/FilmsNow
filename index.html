@@ -366,6 +366,7 @@ header{
       <button class="fbtn" data-week="1" data-label="ראשון">ראשון</button>
       <button class="fbtn" data-week="2" data-label="שני">שני</button>
       <button class="fbtn" data-week="3" data-label="שלישי">שלישי</button>
+      <button class="fbtn" data-week="4" data-label="ותיקים">ותיקים</button>
       <button class="fbtn" data-week="soon" data-label="בקרוב">בקרוב</button>
     </div>
     <div class="filter-row" id="genre-filters">
@@ -432,7 +433,7 @@ header{
 
 <script>
 const SERET = 'https://www.seret.co.il';
-const WEEK_NAMES = ['','ראשון','שני','שלישי','רביעי','חמישי'];
+const WEEK_NAMES = ['','ראשון','שני','שלישי','ותיקים'];
 
 let allMovies = [];
 let detailCache = {};
@@ -755,7 +756,7 @@ function renderGrid() {
     if (daysAgo < 7)  return 1;
     if (daysAgo < 14) return 2;
     if (daysAgo < 21) return 3;
-    return m.week || 99;
+    return 4;
   }
 
   let list = allMovies.slice();
