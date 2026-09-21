@@ -753,7 +753,7 @@ function renderGrid() {
     const today = new Date(); today.setHours(0,0,0,0);
     list = list.filter(m => {
       if (!m.releaseDate) return false;
-      const p = m.releaseDate.split('/');
+      const p = m.releaseDate.split(' ')[0].split('/');
       if (p.length !== 3) return false;
       return new Date(+p[2], +p[1]-1, +p[0]) > today;
     });
