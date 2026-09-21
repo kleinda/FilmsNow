@@ -767,7 +767,7 @@ function renderGrid() {
   } else {
     list = list.filter(m => String(movieWeek(m)) === activeWeekFilter);
   }
-  if (activeGenreFilter !== 'all') list = list.filter(m => matchesGenre(m, activeGenreFilter));
+  if (activeGenreFilter !== 'all') list = list.filter(m => movieWeek(m) !== 'soon' && matchesGenre(m, activeGenreFilter));
   list.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
 
   // update active button to show count matching the grid
