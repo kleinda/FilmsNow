@@ -3,11 +3,12 @@
 ## ארכיטקטורה
 
 ```
-generate.bat (ידני / אוטומטי כל יום שלישי 19:00)
-    └─► generate.js  ← שואב נתונים מ-seret.co.il (עברית Windows-1255)
-            └─► movies.json  ← קובץ סטטי מלא (כל פרטי הסרטים + ביקורות)
-                    └─► Vercel (דרך git push)
-                            └─► index.html טוען /movies.json → עובד על כל מכשיר, ללא CORS
+Windows Task Scheduler (כל יום שלישי 07:00)
+    └─► update-movies.ps1
+            └─► generate.js  ← שואב נתונים מ-seret.co.il (עברית Windows-1255)
+                    └─► movies.json  ← קובץ סטטי מלא (כל פרטי הסרטים + ביקורות)
+                            └─► git push → GitHub → Vercel (deploy אוטומטי ~30 שניות)
+                                    └─► index.html טוען /movies.json → עובד על כל מכשיר, ללא CORS
 ```
 
 **למה movies.json ולא fetch ישיר?**
@@ -62,12 +63,24 @@ seret.co.il מוגן ב-Cloudflare שחוסם:
 
 ---
 
+### `update-movies.ps1`
+הסקריפט האוטומטי — מופעל על-ידי Task Scheduler כל יום שלישי.
+
+```powershell
+node generate.js          ← יוצר movies.json חדש
+git add movies.json meta.json
+git diff --cached --quiet || git commit + git push   ← רק אם היה שינוי
+```
+Vercel מזהה את ה-push ומתפרס אוטומטית תוך ~30 שניות.
+
+---
+
 ### `generate.bat`
-הרצה מלאה: שאיבה + deploy.
+הרצה ידנית: שאיבה + deploy (לשימוש מחוץ לאוטומציה).
 
 ```bat
 node generate.js          ← יוצר movies.json
-git add movies.json index.html
+git add movies.json meta.json index.html GUIDE.md
 git commit -m "update movies data"
 git push                  ← Vercel מתעדכן תוך ~30 שניות
 ```
@@ -78,9 +91,9 @@ git push                  ← Vercel מתעדכן תוך ~30 שניות
 deploy ידני לשינויי קוד בלבד (ללא שאיבה מחדש).
 
 ```bat
-set /p MSG="Commit message: "
+set /p COMMITMSG="Commit message: "
 git add -A
-git commit -m "%MSG%"
+git commit -m "%COMMITMSG%"
 git push
 ```
 
@@ -92,28 +105,35 @@ git push
 
 ---
 
-## משימה אוטומטית — כל יום שלישי 19:00
+## משימה אוטומטית — כל יום שלישי 07:00
 
-**שם המשימה:** `FilmsNow Weekly Update`
+**שם המשימה:** `FilmsNow - Update Movies`
+
+**מה היא עושה:**
+1. מריצה `update-movies.ps1`
+2. `generate.js` שואב נתונים טריים מ-seret.co.il
+3. אם movies.json השתנה — commit + push ל-GitHub
+4. Vercel מזהה את ה-push ומתפרס אוטומטית
+
+**הערה:** אם המחשב כבוי ב-07:00 — המשימה תרוץ מיד בהפעלה הבאה (`StartWhenAvailable`).
 
 **יצירה מחדש** (אם נמחקה):
 ```powershell
-$action  = New-ScheduledTaskAction -Execute "cmd.exe" -Argument '/c "C:\CHAT_GPT_PROJECTS\FilmsNow\generate.bat"' -WorkingDirectory "C:\CHAT_GPT_PROJECTS\FilmsNow"
-$trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Tuesday -At 19:00
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable $true
-Register-ScheduledTask -TaskName "FilmsNow Weekly Update" -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest -Force
+$action   = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"c:\CHAT_GPT_PROJECTS\FilmsNow\update-movies.ps1`""
+$trigger  = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Tuesday -At "07:00"
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RunOnlyIfNetworkAvailable
+$principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive
+Register-ScheduledTask -TaskName "FilmsNow - Update Movies" -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force
 ```
-
-**`-StartWhenAvailable $true`** = אם המחשב היה כבוי/נעול ב-19:00, ירוץ מיד בהפעלה הבאה.
 
 **בדיקת סטטוס:**
 ```powershell
-Get-ScheduledTask -TaskName "FilmsNow Weekly Update" | Get-ScheduledTaskInfo
+Get-ScheduledTask -TaskName "FilmsNow - Update Movies" | Get-ScheduledTaskInfo
 ```
 
 **הרצה ידנית מיידית:**
 ```powershell
-Start-ScheduledTask -TaskName "FilmsNow Weekly Update"
+Start-ScheduledTask -TaskName "FilmsNow - Update Movies"
 ```
 
 ---
@@ -129,8 +149,11 @@ git push -u origin main
 # ב-Vercel: New Project → Import from GitHub → Deploy
 ```
 
-### עדכון שבועי (אוטומטי דרך generate.bat)
-`generate.bat` → שואב → commit → push → Vercel בונה אוטומטית (~30 שניות)
+### עדכון שבועי (אוטומטי — Task Scheduler)
+כל יום שלישי 07:00: `update-movies.ps1` → שואב → commit → push → Vercel בונה אוטומטית (~30 שניות)
+
+### עדכון ידני (generate.bat)
+להרצה מיידית מחוץ ללוח הזמנים — כפול-קליק על `generate.bat`
 
 ### עדכון קוד בלבד
 ```bat
