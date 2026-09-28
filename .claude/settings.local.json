@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const m=require\\('./movies.json'\\);const soon=m.filter\\(x=>{if\\(!x.releaseDate\\)return false;const p=x.releaseDate.split\\(' '\\)[0].split\\('/'\\);if\\(p.length!==3\\)return false;const d=new Date\\(+p[2],+p[1]-1,+p[0]\\);const today=new Date\\(\\);today.setHours\\(0,0,0,0\\);return d>today;}\\);console.log\\(soon.map\\(x=>\\({title:x.hebrewTitle||x.englishTitle,date:x.releaseDate,week:x.week}\\)\\)\\)\")"
+    ]
+  }
+}
