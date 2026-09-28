@@ -769,7 +769,17 @@ function renderGrid() {
     list = list.filter(m => String(movieWeek(m)) === activeWeekFilter);
   }
   if (activeGenreFilter !== 'all') list = list.filter(m => movieWeek(m) !== 'soon' && matchesGenre(m, activeGenreFilter));
-  list.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+  if (activeWeekFilter === 'soon') {
+    function releaseTimestamp(m) {
+      if (!m.releaseDate) return Infinity;
+      const p = m.releaseDate.split(' ')[0].split('/');
+      if (p.length !== 3) return Infinity;
+      return new Date(+p[2], +p[1]-1, +p[0]).getTime();
+    }
+    list.sort((a, b) => releaseTimestamp(a) - releaseTimestamp(b));
+  } else {
+    list.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+  }
 
   // update active button to show count matching the grid
   document.querySelectorAll('#week-filters .fbtn, #genre-filters .fbtn').forEach(b => {
