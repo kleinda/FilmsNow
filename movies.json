@@ -206,7 +206,7 @@
     "coverImg": "https://www.seret.co.il/images/movies/ShauntheSheepTheBeastofMossyBottom/ShauntheSheepTheBeastofMossyBottom_coverBig.jpg",
     "hebrewTitle": "שון כבשון: מצמרר מצחוק",
     "genre": "אנימציה ילדים קומדיה",
-    "rating": "7.2",
+    "rating": "6.4",
     "duration": "81 דקות",
     "actors": "ג'סטין פלטשר",
     "director": "סטיב קוקס",
@@ -217,6 +217,7 @@
     "englishTitle": "Shaun the Sheep The Beast of Mossy Bottom",
     "countryYear": "בריטניה / 2026",
     "reviews": [
+      "סרט משעמם בטירוף, הרבה ילדים השתעממו באולם אפשר לוותר על הסרט וללכת לסרט יותר טוב.",
       "סרט לילדים בלבד. נחמד לא כזה מצחיק. עדיף ללכת לסרט אחר...",
       "היו לשון כבשון כבר שני סרטים בקולנוע והם היו מצוינים. החדש אפילו מוצלח יותר. מאוד מאוד מצחיק ויצירתי.",
       "מקסים ומתוק. ראינו עם 2 ילדים, בת 4 ובן 9 וכולנו אהבנו מאוד. כיף של סרט"
@@ -329,9 +330,9 @@
     "coverImg": "https://www.seret.co.il/images/movies/TheBay2026/TheBay2026_coverBig.jpg",
     "hebrewTitle": "מפרץ האימה",
     "genre": "אימה מתח/פעולה",
-    "rating": "2.7",
+    "rating": "2.8",
     "duration": "86 דקות",
-    "actors": "",
+    "actors": "פרנצ'סקה איסטווד",
     "director": "",
     "plot": "אמה ולני, שתי חברות טובות שנוסעות יחד לחתונה בתאילנד, מוצאות את עצמן לכודות על סירת תיירים ששוקעת בלב שמורה ימית של כרישים טיגריסיים",
     "releaseDate": "8/10/2026",
@@ -874,7 +875,7 @@
     "coverImg": "https://www.seret.co.il/images/movies/Wicker/Wicker_coverBig.jpg",
     "hebrewTitle": "בעל בהזמנה",
     "genre": "קומדיה דרמה פנטזיה",
-    "rating": "0",
+    "rating": "9",
     "duration": "105 דקות",
     "actors": "אוליביה קולמן",
     "director": "אלכס יוסטון פישר",
@@ -884,7 +885,9 @@
     "isIsraeli": false,
     "englishTitle": "Wicker",
     "countryYear": "בריטניה / 2026",
-    "reviews": []
+    "reviews": [
+      "סרט מעולה. משאיר המון מחשבות על סטיגמות חברתיות, קנאה ולחץ חברתי בישוב קטן. מתכתב מאוד עם המציאות של ימינו. סרט מומלץ בחום"
+    ]
   },
   {
     "mid": "8581",
