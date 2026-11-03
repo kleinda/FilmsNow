@@ -80,7 +80,7 @@
     "coverImg": "https://www.seret.co.il/images/movies/TheStranger/TheStranger_coverBig.jpg",
     "hebrewTitle": "הזר",
     "genre": "דרמה זר",
-    "rating": "7",
+    "rating": "8.3",
     "duration": "122 דקות",
     "actors": "בנג'מן וואזן",
     "director": "פרנסואה אוזון",
@@ -128,7 +128,7 @@
     "coverImg": "https://www.seret.co.il/images/movies/UnderwaterSpeculations/UnderwaterSpeculations_coverBig.jpg",
     "hebrewTitle": "הסתברות לאהבה",
     "genre": "קומדיה ישראלי",
-    "rating": "8.1",
+    "rating": "8.2",
     "duration": "94 דקות",
     "actors": "יהורם גאון",
     "director": "עמיחי גרינברג",
@@ -232,7 +232,7 @@
     "coverImg": "https://www.seret.co.il/images/movies/Jaffa2/Jaffa2_coverBig.jpg",
     "hebrewTitle": "תמונות יפואיות 2",
     "genre": "קומדיה ישראלי",
-    "rating": "8.1",
+    "rating": "7.9",
     "duration": "87 דקות",
     "actors": "אורי גבריאל",
     "director": "אריק לובצקי",
@@ -666,7 +666,7 @@
     "coverImg": "https://www.seret.co.il/images/movies/ForgottenIsland/ForgottenIsland_coverBig.jpg",
     "hebrewTitle": "האי הנעלם",
     "genre": "אנימציה ילדים",
-    "rating": "9",
+    "rating": "9.1",
     "duration": "109 דקות",
     "actors": "סיון תם",
     "director": "ג'ואל קרופורד",
@@ -911,7 +911,9 @@
     "isIsraeli": false,
     "englishTitle": "Rolling Loud",
     "countryYear": "ארה\"ב / 2026",
-    "reviews": []
+    "reviews": [
+      "אוון ווילסון כובש את המסך בסרט בוטה שלא מתאים לילדים, למרות שבמרכז הסיפור מערכת יחסים ובילוי של אבא עם הבן.."
+    ]
   },
   {
     "mid": "8638",
@@ -1043,7 +1045,10 @@
     "isIsraeli": true,
     "englishTitle": "The Wedding Entertainer",
     "countryYear": "ישראל / 2026",
-    "reviews": []
+    "reviews": [
+      "הבדחן - THE WEDDING ENTERTAINER סרט בסדר - טרגדיה, מעט דרמה וקצת הומר שחור. מישהו/הי שמבינים יידיש יהיה להם יותר קל להבין. אפשר לצפות בו.",
+      "אם היו 10 כוכבים זה 10/10, טרגדיה מעט דרמה וקצת הומר שחור, שולי רנד יחד עם טל פרידמן ומלכי גולדמן הנהדרת מצגים סיפור שהוא יותר מהכל התמודדות או הקושי בעמידה בה, פחות סרט על העולם החרדי ויותר מחזמר על הטרגדיה שנקראת המציאות ומידי עם מתנגשת עם הרצון לחיות קצת יותר טוב. הרבה הומר, הרבה מוזיקה מעולה של אסף תלמודי והרבה הומר ביידיש, לפעמים בטעם קצת מר קצת מתוק. מעולה ממש."
+    ]
   },
   {
     "mid": "8628",
