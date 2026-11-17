@@ -12,6 +12,12 @@ echo === Deploying to Vercel ===
 git add movies.json meta.json index.html GUIDE.md
 git commit -m "update movies data"
 git push
+if errorlevel 1 (
+  echo.
+  echo PUSH FAILED - nothing was deployed. See the error above.
+  pause
+  exit /b 1
+)
 echo.
 echo Done. Vercel updates in about 30 seconds.
 pause

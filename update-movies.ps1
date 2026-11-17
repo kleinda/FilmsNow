@@ -9,4 +9,5 @@ if ($LASTEXITCODE -ne 0) {
     $date = Get-Date -Format "dd/MM/yyyy"
     git commit -m "chore: update movies data [$date]"
     git push
+    if ($LASTEXITCODE -ne 0) { Write-Error "git push failed - nothing was deployed"; exit 1 }
 }
